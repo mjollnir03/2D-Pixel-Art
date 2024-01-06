@@ -21,6 +21,7 @@
     box-sizing: border-box;
     margin: 0;
     padding: 0;
+    
 }
 
 html {
@@ -30,7 +31,7 @@ html {
 body { 
     background-color: var(--background-color);
     font-family: "Nippo-Medium";
-    color: aliceblue;
+    
 }
 
 
@@ -159,7 +160,7 @@ input[type="range"]::-webkit-slider-thumb {
 }
 
 .slider-box {
-    margin-bottom: 100px;
+    margin-bottom: 10px;
     position: relative;
     width: 100%;
     /* border: red solid 1px; */
@@ -168,6 +169,13 @@ input[type="range"]::-webkit-slider-thumb {
 .btn-on {
     background-color: var(--font-color);
     color: var(--box-color);
+}
+
+.grid-size {
+    margin-bottom: 60px;
+    text-align: center;
+    font-family: "Nippo-Regular";
+    color: var(--font-color);
 }
 
 /* ID'S */
@@ -188,4 +196,10 @@ input[type="range"]::-webkit-slider-thumb {
     position: absolute;
     top: 12px;
     left: 0;
+}
+
+#range-value {
+    color: var(--font-color);
+    font-family: "Nippo-Regular";
+
 }
