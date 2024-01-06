@@ -1,0 +1,89 @@
+/*
+ * Font Styles:
+ * font-family: "Nippo-Extralight";
+ * font-family: "Nippo-Light";
+ * font-family: "Nippo-Regular";
+ * font-family: "Nippo-Medium";
+ * font-family: "Nippo-Bold";
+*/
+
+:root {
+    --font-color: #F6D776;
+    --background-color: #191919;
+    --box-color: #262626;
+}
+
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body { 
+    background-color: var(--background-color);
+    font-family: "Nippo-Medium";
+    color: aliceblue;
+}
+
+footer {
+    text-align: center;
+    font-family: "Nippo-Light";
+    color: #727171;
+    padding-top: 50px;
+} 
+
+
+.wrapper {
+    max-width: 1500px;
+    margin-left: auto;
+    margin-right: auto;
+    /* border: solid red 1px; */
+}
+
+.header {
+    color: var(--font-color);
+    margin-top: 50px;
+    text-align: center;
+    font-size: 60px;
+}
+
+.main-content {
+    user-select: none;
+    display: flex;
+    justify-content: space-evenly;
+    margin-top: 60px;
+    margin-bottom: 60px;
+}
+
+.panel {
+    width: 300px;
+    height: 660px;
+    background-color: var(--box-color);
+    padding: 30px;
+    border-radius: 5px;
+}
+
+.grid {
+    width: 660px;
+    height: 660px;
+    background-color: var(--box-color);
+    padding: 30px;
+    border-radius: 5px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.grid__container {
+    display: grid;
+    width: 600px;
+    height: 600px;
+    background-color: white;
+    /* CHANGE ABOVE */
+    border: #B9B4C7 1px solid;
+}
