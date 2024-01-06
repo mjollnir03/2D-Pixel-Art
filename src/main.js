@@ -2,20 +2,23 @@
 //Do not define this file as a module
 
 //PUBLIC VARIABLES
+let gridValue;
 const rangeSlider = document.getElementById('range-slider');
 const progressBar = document.getElementById('progress-bar');
 
 const rangeValue = document.querySelectorAll('.range-value');
 
-// const 
+const buttons = document.getElementsByTagName('button');
+
+const clearButton = document.getElementById('clear-grid'); //special case
 
 // Function to update progress bar width based on range slider value
 function updateProgressBar() {
-    let value = rangeSlider.value;
+    gridValue = rangeSlider.value;
     
-    progressBar.style.width = (value / 60) * 100 + '%';
+    progressBar.style.width = (gridValue / 60) * 100 + '%';
     //Call update rangeValue
-    updateRangeValue(value)
+    updateRangeValue(gridValue);
 }
 
 function updateRangeValue(value) {
@@ -25,9 +28,26 @@ function updateRangeValue(value) {
     }
 }
 
+function clearGrid(){
+
+}
+
+
+// EVENT LISTENERS
 // Add an event listener to detect changes in the range slider value
 rangeSlider.addEventListener('input', updateProgressBar);
+for(let i = 0; i < buttons.length; i++)
+{
+    buttons[i].addEventListener('click', () => {buttons[i].classList.toggle('btn-on')});
+}
 
+clearButton.addEventListener('click', );
+
+
+
+
+
+// FUNCTION CALLS
 // Call the function initially to set the initial width based on the default value
 updateProgressBar();
 
