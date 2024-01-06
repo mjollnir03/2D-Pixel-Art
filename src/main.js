@@ -18,7 +18,3 @@ rangeSlider.addEventListener('input', updateProgressBar);
 updateProgressBar();
 
 
-
-// const container = document.getElementById("he")
-// container.style.backgroundColor = "red";
-
