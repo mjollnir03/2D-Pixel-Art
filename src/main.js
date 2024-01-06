@@ -28,7 +28,14 @@ function updateRangeValue(value) {
     }
 }
 
-function clearGrid(){
+//ALSO HAVE TO ADD THAT WHEN ANOTHER BUTTON IS CLICKED, TOO UN TOGGLE THE OTHER BUTTON
+
+function toggleOn() {
+    //first check if any others are on
+    
+}
+
+function clearGrid() {
 
 }
 
