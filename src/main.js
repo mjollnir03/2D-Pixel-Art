@@ -2,11 +2,23 @@
 //Do not define this file as a module
 
 
-console.log("Hello World");
+let rangeSlider = document.getElementById('range-slider');
+let progressBar = document.getElementById('progress-bar');
 
-
-const container = 
-function cool()
-{
-    return 3;
+// Function to update progress bar width based on range slider value
+function updateProgressBar() {
+    let value = rangeSlider.value;
+    progressBar.style.width = (value / 60) * 100 + '%';
 }
+
+// Add an event listener to detect changes in the range slider value
+rangeSlider.addEventListener('input', updateProgressBar);
+
+// Call the function initially to set the initial width based on the default value
+updateProgressBar();
+
+
+
+// const container = document.getElementById("he")
+// container.style.backgroundColor = "red";
+

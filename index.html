@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="./styles/modern-normalize.css">
     <link rel="stylesheet" href="./styles/fonts/Nippo_Complete/css/nippo.css">
     <link rel="stylesheet" href="./styles/styles.css">
+    <link rel="icon" href="./src/icon.png">
 
 </head>
 
@@ -18,12 +19,43 @@
         </div>
 
         <div class="main-content">
+
             <div class="panel">
 
+                <!-- INPUT COLOR -->
+                <div class="color-card">
+                    <div class="color-box">
+                        <input type="color" id="color-select">
+                        <span>Pen Color</span>
+                    </div>
+                </div>
+
+                <div class="color-card cc2">
+                    <div class="color-box">
+                        <input  type="color" value="#FFFFFF" id="bg-color-select">
+                        <span>Background Color</span>
+                    </div>
+                </div>
+
+                <!-- BUTTONS -->
+                <button id="color-grabber">Color Grabber</button>
+                <button id="color-fill">Color Fill</button>
+
+                <button id="eraser-btn">Eraser</button>
+                <button id="rainbow-btn">Toggle Rainbow</button>
+
+                <!-- SLIDER -->
+                <div class="slider-box">
+                    <input id="range-slider" type="range" min="1" max="60" value="24">
+                    <div id="progress-bar"></div>
+                </div>
+
+                <button id="grid-btn" class="btn-on">Toggle Grid Lines</button>
+                <button id="clear-grid">Clear</button>
             </div>
 
             <div class="grid">
-                <div class="grid__container "></div>
+                <div class="grid-container "></div>
 
             </div>
         </div>
@@ -37,5 +69,4 @@
 
     
 </body>
-<footer>@Ellmaer Ranjber</footer>
 </html>
