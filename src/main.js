@@ -14,6 +14,7 @@ const progressBar = document.getElementById('progress-bar');
 const rangeValue = document.querySelectorAll('.range-value');
 
 const buttons = document.getElementsByTagName('button');
+let buttons_tf = [false, false, false, false, false, false];
 
 
 

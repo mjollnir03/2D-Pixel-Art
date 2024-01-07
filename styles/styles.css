@@ -166,6 +166,7 @@ input[type="range"]::-webkit-slider-thumb {
 .grid-item { /*Will be used later on*/
     
     user-select: none;
+    border: #191919 solid 1px;
 }
 
 .slider-box {
