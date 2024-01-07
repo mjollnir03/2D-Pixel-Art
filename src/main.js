@@ -5,18 +5,46 @@
 const colorSelect = document.getElementById('color-select');
 const bgColorSelect = document.getElementById('bg-color-select');
 
-let gridValue;
-let penColor;
-let bgPenColor;
+let gridValue = 25;
+let penColor = '#000000';
+let bgPenColor= '#ffffff';
+
 const rangeSlider = document.getElementById('range-slider');
 const progressBar = document.getElementById('progress-bar');
 
 const rangeValue = document.querySelectorAll('.range-value');
 
 const buttons = document.getElementsByTagName('button');
-let buttons_tf = [false, false, false, false, false, false];
+let buttonsTF_1_4 = [false, false, false, false];
+let toggleGrid = true;
+let clearGrid = false;
+
+const gridContainer = document.querySelector('.grid-container');
 
 
+function createGrid() {
+    
+    gridContainer.style.gridTemplateColumns = `repeat(${gridValue}, 1fr)`;
+    gridContainer.style.gridTemplateRows = `repeat(${gridValue}, 1fr)`;
+
+    for(let i = 0; i < gridValue ** 2; i++)
+    {
+        const pixel = document.createElement('div');
+        pixel.classList.add('grid-item');
+        pixel.setAttribute('draggable', 'false');
+        pixel.style.backgroundColor = bgPenColor;
+        gridContainer.appendChild(pixel);
+
+    }
+}
+
+function deleteGrid() {
+
+}
+
+function reInitGrid() {
+    createGrid();
+}
 
 
 // Function to update progress bar width based on range slider value
@@ -26,6 +54,8 @@ function updateProgressBar() {
     progressBar.style.width = (gridValue / 60) * 100 + '%';
     //Call update rangeValue
     updateRangeValue(gridValue);
+    deleteGrid();
+    reInitGrid();
 }
 
 function updateRangeValue(value) {
@@ -65,6 +95,7 @@ for(let i = 0; i < 4; i++)
 {
     buttons[i].addEventListener('click', () => {
         checkButtons(buttons[i]);
+
     });
 }
 buttons[4].addEventListener('click', () => { //toggle grid
@@ -77,13 +108,9 @@ buttons[5].addEventListener('click', () => { //clear grid
 })
 
 
-
-
-
-
-
 // FUNCTION CALLS
 // Call the function initially to set the initial width based on the default value
 updateProgressBar();
+
 
 

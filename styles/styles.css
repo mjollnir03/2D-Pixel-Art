@@ -159,14 +159,12 @@ input[type="range"]::-webkit-slider-thumb {
     background-color: white;
     /* CHANGE ABOVE */
     border: none;
-    grid-template-columns: repeat(3, 1fr);
-    grid-template-rows: repeat(3, 1fr);
 }
 
 .grid-item { /*Will be used later on*/
     
     user-select: none;
-    border: #191919 solid 1px;
+    border: #737373 solid 1px;
 }
 
 .slider-box {
