@@ -57,7 +57,7 @@ bgColorSelect.addEventListener('input', () => {
     bgPenColor = bgColorSelect.value;
 });
 
-rangeSlider.addEventListener('input', updateProgressBar()); //update slider 1 - 60
+rangeSlider.addEventListener('input', updateProgressBar); //update slider 1 - 60
 
 //BUTTONS {brute force}
 for(let i = 0; i < 4; i++)
