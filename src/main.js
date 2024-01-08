@@ -16,7 +16,7 @@ const rangeValue = document.querySelectorAll('.range-value');
 
 const buttons = document.getElementsByTagName('button');
 let buttonsTF_1_4 = [false, false, false, false];
-let toggleGrid = true;
+let toggleGrid = false;
 let clearGrid = false;
 
 const gridContainer = document.querySelector('.grid-container');
