@@ -21,9 +21,9 @@ let clearGrid = false;
 
 const gridContainer = document.querySelector('.grid-container');
 
+// Function to create the Grid, bases on the gridValue variable
+function createGrid() { 
 
-function createGrid() {
-    
     gridContainer.style.gridTemplateColumns = `repeat(${gridValue}, 1fr)`;
     gridContainer.style.gridTemplateRows = `repeat(${gridValue}, 1fr)`;
 
@@ -38,28 +38,36 @@ function createGrid() {
     }
 }
 
+// Function to delete all the div elements within the Grid
 function deleteGrid() {
-
+    const gridItems = document.querySelectorAll('.grid-item');
+    
+    // Remove each grid item from the grid container
+    gridItems.forEach(gridItem => {
+        gridContainer.removeChild(gridItem);
+    });
 }
 
 function reInitGrid() {
     createGrid();
+    //should add method to add event listeners
 }
 
 
 // Function to update progress bar width based on range slider value
 function updateProgressBar() {
-    gridValue = rangeSlider.value;
+    gridValue = rangeSlider.value; //get value from the actual input slider
     
     progressBar.style.width = (gridValue / 60) * 100 + '%';
     //Call update rangeValue
     updateRangeValue(gridValue);
+    //method to remove all event listeners here
     deleteGrid();
     reInitGrid();
 }
 
-function updateRangeValue(value) {
-    for(let i = 0; i < rangeValue.length; i++)
+function updateRangeValue(value) { //this function updates the range slider values displayed to the users
+    for(let i = 0; i < rangeValue.length; i++) //there are two ".range-value" <span> elements so we use a for loop to update them both
     {
         rangeValue[i].textContent = value; 
     }
@@ -88,6 +96,7 @@ bgColorSelect.addEventListener('input', () => {
     bgPenColor = bgColorSelect.value;
 });
 
+// The function below will also link to call the reInitGrid()
 rangeSlider.addEventListener('input', updateProgressBar); //update slider 1 - 60
 
 //BUTTONS {brute force}
