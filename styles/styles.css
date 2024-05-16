@@ -46,6 +46,11 @@ button {
     padding: 9px 15px;
     width: 100%;
     margin-bottom: 10px;
+    cursor: pointer;
+}
+
+input {
+    cursor: pointer;
 }
 
 input[type="color"] {
@@ -57,7 +62,7 @@ input[type="color"] {
     width: 200%;
     height: 200%;
     transform: translateX(-10px) translateY(-10px);
-
+    cursor: pointer;
 }
 
 input[type="range"] {
@@ -70,6 +75,14 @@ input[type="range"] {
 }
 
 input[type="range"]::-webkit-slider-thumb {
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--font-color);
+}
+
+input[type="range"]::-moz-range-thumb {
     appearance: none;
     width: 20px;
     height: 20px;
