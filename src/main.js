@@ -37,8 +37,21 @@ function createGrid() {
         gridContainer.appendChild(pixel);
     }
 }
+
 function handleMouseDown(event) { // change accordingly 
     event.target.style.backgroundColor = penColor;
+    mouseDown = true; 
+
+}
+
+function handleMouseUp() { 
+    mouseDown = false; 
+}
+
+function handleMouseHover(event) {
+    if(mouseDown) {
+        event.target.style.backgroundColor = penColor;
+    }
 }
 
 function addEventListeners() { // need better implementation
@@ -46,6 +59,7 @@ function addEventListeners() { // need better implementation
 
     gridItems.forEach(gridItem => {
         gridItem.addEventListener('mousedown', handleMouseDown);
+        gridItem.addEventListener('mouseenter', handleMouseHover);
     });
     
     return;
@@ -56,7 +70,9 @@ function removeEventListeners() { // need better implementation
 
     gridItems.forEach(gridItem => {
         gridItem.removeEventListener('mousedown', handleMouseDown);
+        gridItem.removeEventListener('mouseenter', handleMouseHover);
     });
+    
     return;
 }
 
@@ -137,6 +153,9 @@ buttons[5].addEventListener('click', () => { //clear grid
     buttons[5].classList.toggle('btn-on');
     //need to add clear grid function later on
 })
+
+// Add mouseup event listener to the entire document
+document.addEventListener('mouseup', handleMouseUp);
 
 
 // FUNCTION CALLS
