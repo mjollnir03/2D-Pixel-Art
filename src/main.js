@@ -140,7 +140,7 @@ colorSelect.addEventListener('input', () => {
 });
 
 bgColorSelect.addEventListener('input', () => {
-    const bgPenColor = bgColorSelect.value; 
+    bgPenColor = bgColorSelect.value; 
     const gridItems = document.querySelectorAll('.grid-item');
 
     gridItems.forEach(gridItem => {
