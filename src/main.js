@@ -2,19 +2,20 @@
 //Do not define this file as a module
 
 //PUBLIC VARIABLES
-const colorSelect = document.getElementById('color-select');
-const bgColorSelect = document.getElementById('bg-color-select');
+//statements which are giving a variable a DOM object will be declared constant for future clarity
+const colorSelect = document.getElementById('color-select'); //the colorSelect variable is the user input for the pen color
+const bgColorSelect = document.getElementById('bg-color-select'); //the bgColorSelect variable is the user input for the back ground color
 
-let penColor = '#000000';
-let bgPenColor= '#ffffff';
+let penColor = colorSelect.value; //the variable will take the value attribute from the colorSelect variable of type HTMLElement
+let bgPenColor= bgColorSelect.value; //the variable will take the value attribute from the bgColorSelect variable of type HTMLElement
 let mouseDown = false;
 
-const rangeSlider = document.getElementById('range-slider');
+const rangeSlider = document.getElementById('range-slider'); //official input slider where we get the size of the grid from the user 
 let gridValue = rangeSlider.value; //get value from the actual input slider
 
-const progressBar = document.getElementById('progress-bar');
+const progressBar = document.getElementById('progress-bar'); //progress bar has no real value, instead will be used to visually showcase the size of the grid
 
-const rangeValue = document.querySelectorAll('.range-value');
+const rangeValue = document.querySelectorAll('.range-value'); //this is to display the actual size of the grid
 
 const buttons = document.getElementsByTagName('button');
 let buttonsTF_1_4 = [false, false, false, false];
@@ -38,7 +39,15 @@ function createGrid() {
     }
 }
 
-function handleMouseDown(event) { // change accordingly 
+//function to convert RGB string to hex string, can easily be found online
+function rgbToHex(rgbString) {
+    // Extract the RGB values
+    const rgb = rgbString.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/); //regular expression to define a rgb
+    // Convert each RGB value to hex and concatenate them
+    return "#" + ((1 << 24) + (parseInt(rgb[1]) << 16) + (parseInt(rgb[2]) << 8) + parseInt(rgb[3])).toString(16).slice(1); //
+}
+
+function handleMouseDown(event) { 
     event.target.style.backgroundColor = penColor;
     mouseDown = true; 
 
@@ -50,11 +59,11 @@ function handleMouseUp() {
 
 function handleMouseHover(event) {
     if(mouseDown) {
-        event.target.style.backgroundColor = penColor;
+        handleMouseDown(event); //we will handle the main logic in handleMouseDown()
     }
 }
 
-function addEventListeners() { // need better implementation
+function addGridEventListeners() { 
     const gridItems = document.querySelectorAll('.grid-item');
 
     gridItems.forEach(gridItem => {
@@ -65,14 +74,14 @@ function addEventListeners() { // need better implementation
     return;
 }
 
-function removeEventListeners() { // need better implementation
+function removeGridEventListeners() { 
     const gridItems = document.querySelectorAll('.grid-item');
 
     gridItems.forEach(gridItem => {
         gridItem.removeEventListener('mousedown', handleMouseDown);
         gridItem.removeEventListener('mouseenter', handleMouseHover);
     });
-    
+
     return;
 }
 
@@ -88,10 +97,10 @@ function deleteGrid() {
 
 function reInitGrid(gridValue) { //might not have to pass the gridValue, will change later if needed
     updateRangeValue(gridValue);
-    removeEventListeners();
+    removeGridEventListeners();
     deleteGrid();
     createGrid();
-    addEventListeners();
+    addGridEventListeners();
 }
 
 
@@ -131,8 +140,19 @@ colorSelect.addEventListener('input', () => {
 });
 
 bgColorSelect.addEventListener('input', () => {
-    bgPenColor = bgColorSelect.value;
+    const bgPenColor = bgColorSelect.value; 
+    const gridItems = document.querySelectorAll('.grid-item');
+
+    gridItems.forEach(gridItem => {
+        const gridItemColor = gridItem.style.backgroundColor;
+        const gridItemColorHex = gridItemColor.startsWith('#') ? gridItemColor : rgbToHex(gridItemColor); // Convert the grid item color to hex
+
+        if (gridItemColorHex !== penColor) {
+            gridItem.style.backgroundColor = bgPenColor;
+        }
+    });
 });
+
 
 // The function below will also link to call the reInitGrid()
 rangeSlider.addEventListener('input', updateProgressBar); //update slider 1 - 60
@@ -162,7 +182,7 @@ document.addEventListener('mouseup', handleMouseUp);
 
 // Initial Function call to make it that grid is created, and event listeners are added
 createGrid();
-addEventListeners();
+addGridEventListeners();
 
 
 
