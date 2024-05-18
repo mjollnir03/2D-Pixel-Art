@@ -47,10 +47,21 @@ function rgbToHex(rgbString) {
     return "#" + ((1 << 24) + (parseInt(rgb[1]) << 16) + (parseInt(rgb[2]) << 8) + parseInt(rgb[3])).toString(16).slice(1); //
 }
 
-function handleMouseDown(event) { 
+function handleMouseDown(event) {
+    // Set the background color of the target element
     event.target.style.backgroundColor = penColor;
-    mouseDown = true; 
+    
+    // Check if penColor is equal to bgPenColor
+    if (penColor === bgPenColor) {
+        // If they are equal, remove the 'changed' class from the target element
+        event.target.classList.remove('changed');
+    } else if(penColor !== bgPenColor) { // Second if statement so that future additions are easier to add
+        // Otherwise, add the 'changed' class to the target element
+        event.target.classList.add('changed');
+    }
 
+    // Set mouseDown to true
+    mouseDown = true;
 }
 
 function handleMouseUp() { 
@@ -139,15 +150,12 @@ colorSelect.addEventListener('input', () => {
     penColor = colorSelect.value;
 });
 
-bgColorSelect.addEventListener('input', () => {
+bgColorSelect.addEventListener('input', () => { // I will update this so that it will only change the gridItem when the 'changed' class is not present
     bgPenColor = bgColorSelect.value; 
     const gridItems = document.querySelectorAll('.grid-item');
 
     gridItems.forEach(gridItem => {
-        const gridItemColor = gridItem.style.backgroundColor;
-        const gridItemColorHex = gridItemColor.startsWith('#') ? gridItemColor : rgbToHex(gridItemColor); // Convert the grid item color to hex
-
-        if (gridItemColorHex !== penColor) {
+        if (!gridItem.classList.contains('changed')) {
             gridItem.style.backgroundColor = bgPenColor;
         }
     });
