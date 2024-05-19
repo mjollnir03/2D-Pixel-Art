@@ -43,13 +43,14 @@ function createGrid() {
 function gridLineManipulation() {
     let property = '';
     if(toggleGrid) {
-        property = 'solid .5px';
+        property = 'solid 1px';
     }
 
     const gridItems = document.querySelectorAll('.grid-item'); //need to change this so that we don't keep creating a gridItems variable every time
 
     gridItems.forEach(gridItem => {
-        gridItem.style.border = property;
+        gridItem.style.borderTop = property;
+        gridItem.style.borderRight = property;
     })
     
 }
