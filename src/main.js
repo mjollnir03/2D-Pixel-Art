@@ -35,11 +35,27 @@ function createGrid() {
         pixel.classList.add('grid-item');
         pixel.setAttribute('draggable', 'false');
         pixel.style.backgroundColor = bgPenColor;
+
         gridContainer.appendChild(pixel);
     }
 }
 
-//function to convert RGB string to hex string, can easily be found online
+function gridLineManipulation() {
+    let property = '';
+    if(toggleGrid) {
+        property = 'solid .5px';
+    }
+
+    const gridItems = document.querySelectorAll('.grid-item'); //need to change this so that we don't keep creating a gridItems variable every time
+
+    gridItems.forEach(gridItem => {
+        gridItem.style.border = property;
+    })
+    
+}
+
+
+//function to convert RGB string to hex string, will be used for color grabber
 function rgbToHex(rgbString) {
     // Extract the RGB values
     const rgb = rgbString.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/); //regular expression to define a rgb
@@ -47,7 +63,7 @@ function rgbToHex(rgbString) {
     return "#" + ((1 << 24) + (parseInt(rgb[1]) << 16) + (parseInt(rgb[2]) << 8) + parseInt(rgb[3])).toString(16).slice(1); //
 }
 
-function handleMouseDown(event) {
+function handleMouseDown(event) { //main logic may have to implemented here
     // Set the background color of the target element
     event.target.style.backgroundColor = penColor;
     
@@ -112,6 +128,7 @@ function reInitGrid(gridValue) { //might not have to pass the gridValue, will ch
     deleteGrid();
     createGrid();
     addGridEventListeners();
+    gridLineManipulation();
 }
 
 
@@ -173,10 +190,16 @@ for(let i = 0; i < 4; i++)
 
     });
 }
+
 buttons[4].addEventListener('click', () => { //toggle grid
     buttons[4].classList.toggle('btn-on');
-    //need to add toggle grid function later
+    toggleGrid = !toggleGrid;
+    // toggle grid functionality 
+
+    gridLineManipulation();
+    
 })
+
 buttons[5].addEventListener('click', () => { //clear grid
     buttons[5].classList.toggle('btn-on');
     //need to add clear grid function later on
