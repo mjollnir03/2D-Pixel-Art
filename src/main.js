@@ -24,6 +24,7 @@ let eraser = false;
 let toggleRainbow = false;
 let toggleGrid = false;
 
+
 let variablesArray = [colorGRabber, colorFill, eraser, toggleRainbow, toggleGrid];
 
 const gridContainer = document.querySelector('.grid-container');
@@ -43,6 +44,22 @@ function createGrid() {
         gridContainer.appendChild(pixel);
     }
 }
+
+function clearGrid() {
+    const gridItems = document.querySelectorAll('.grid-item'); //need to change this so that we don't keep creating a gridItems variable every time
+
+    gridItems.forEach(gridItem => {
+        gridItem.classList.remove('changed');
+        gridItem.style.backgroundColor = bgPenColor;
+        gridItem.classList.add("transition-class");
+    })
+    setTimeout(function () {
+        gridItems.forEach(gridItem => {
+            gridItem.classList.remove("transition-class");
+        })
+    }, 700);
+}
+
 
 function gridLineManipulation() {
     let property = '';
@@ -197,13 +214,11 @@ for(let i = 0; i < 4; i++)
 {
     buttons[i].addEventListener('click', () => {
         checkButtons(buttons[i]);
-        buttons[i].style.transition = 'background-color 0.5s ease-out';
     });
 }
 
 buttons[4].addEventListener('click', () => { //toggle grid
     buttons[4].classList.toggle('btn-on');
-    buttons[4].style.transition = 'background-color 0.5s ease-out';
     toggleGrid = !toggleGrid;
     // toggle grid functionality 
 
@@ -213,15 +228,19 @@ buttons[4].addEventListener('click', () => { //toggle grid
 
 buttons[5].addEventListener('click', () => { //clear grid
     buttons[5].classList.toggle('btn-on');
-    //need to add clear grid function later on
-    reInitGrid();
     
-    //below should become a function
-    //the function should also make it so that it will fade to the background color
-    buttons[5].style.transition = 'background-color 0.5s ease-out';
+    clearGrid();
+    
+
     setTimeout(function () {
         buttons[5].classList.remove('btn-on');
-    }, 1500);
+    }, 700);
+
+    gridItems.forEach(gridItem => {
+        gridItem.classList.remove("transition-class");
+    })
+
+    //reInitGrid();
 })
 
 // Add mouseup event listener to the entire document

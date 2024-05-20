@@ -200,6 +200,10 @@ input[type="range"]::-moz-range-thumb {
     color: var(--font-color);
 }
 
+.transition-class {
+    transition : background-color 0.5s ease-out;
+}
+
 /* ID'S */
 
 #color-fill {
