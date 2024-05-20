@@ -18,9 +18,13 @@ const progressBar = document.getElementById('progress-bar'); //progress bar has 
 const rangeValue = document.querySelectorAll('.range-value'); //this is to display the actual size of the grid
 
 const buttons = document.getElementsByTagName('button');
-let buttonsTF_1_4 = [false, false, false, false];
+let colorGRabber = false;
+let colorFill = false;
+let eraser = false; 
+let toggleRainbow = false;
 let toggleGrid = false;
-let clearGrid = false;
+
+let variablesArray = [colorGRabber, colorFill, eraser, toggleRainbow, toggleGrid];
 
 const gridContainer = document.querySelector('.grid-container');
 
@@ -123,8 +127,8 @@ function deleteGrid() {
     });
 }
 
-function reInitGrid(gridValue) { //might not have to pass the gridValue, will change later if needed
-    updateRangeValue(gridValue);
+function reInitGrid() { //might not have to pass the gridValue, will change later if needed
+    updateRangeValue();
     removeGridEventListeners();
     deleteGrid();
     createGrid();
@@ -139,25 +143,30 @@ function updateProgressBar() {
     
     progressBar.style.width = (gridValue / 60) * 100 + '%';
     // Call reInitGrid(), this will call necessary functions to correct grid
-    reInitGrid(gridValue);
+    reInitGrid();
 }
 
-function updateRangeValue(value) { //this function updates the range slider values displayed to the users
+function updateRangeValue() { //this function updates the range slider values displayed to the users
     for(let i = 0; i < rangeValue.length; i++) //there are two ".range-value" <span> elements so we use a for loop to update them both
     {
-        rangeValue[i].textContent = value; 
+        rangeValue[i].textContent = gridValue; 
     }
 }
 
 function checkButtons(buttonId) {
     for (let i = 0; i < 4; i++) {
         if (buttons[i] === buttonId) {
-        // Toggle the class for the clicked button
-        buttons[i].classList.toggle('btn-on');
+            // Toggle the class for the clicked button
+            buttons[i].classList.toggle('btn-on');
+            variablesArray[i] = !variablesArray[i];
+            
         } else {
-        // Remove the class for other buttons
-        buttons[i].classList.remove('btn-on');
+            // Remove the class for other buttons
+            buttons[i].classList.remove('btn-on');
+            variablesArray[i] = false;
+            
         }
+        //console.log(variablesArray);
     }
 }
 
@@ -183,17 +192,18 @@ bgColorSelect.addEventListener('input', () => { // I will update this so that it
 // The function below will also link to call the reInitGrid()
 rangeSlider.addEventListener('input', updateProgressBar); //update slider 1 - 60
 
-// BUTTONS {brute force}
+// BUTTONS 
 for(let i = 0; i < 4; i++)
 {
     buttons[i].addEventListener('click', () => {
         checkButtons(buttons[i]);
-
+        buttons[i].style.transition = 'background-color 0.5s ease-out';
     });
 }
 
 buttons[4].addEventListener('click', () => { //toggle grid
     buttons[4].classList.toggle('btn-on');
+    buttons[4].style.transition = 'background-color 0.5s ease-out';
     toggleGrid = !toggleGrid;
     // toggle grid functionality 
 
@@ -204,6 +214,14 @@ buttons[4].addEventListener('click', () => { //toggle grid
 buttons[5].addEventListener('click', () => { //clear grid
     buttons[5].classList.toggle('btn-on');
     //need to add clear grid function later on
+    reInitGrid();
+    
+    //below should become a function
+    //the function should also make it so that it will fade to the background color
+    buttons[5].style.transition = 'background-color 0.5s ease-out';
+    setTimeout(function () {
+        buttons[5].classList.remove('btn-on');
+    }, 1500);
 })
 
 // Add mouseup event listener to the entire document

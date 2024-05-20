@@ -177,8 +177,8 @@ input[type="range"]::-moz-range-thumb {
 .grid-item { /*Will be used later on*/
     
     user-select: none;
-    /* The line below will toggle the lines in the grid */
-    /* border: #737373 solid 1px; */
+
+    cursor: crosshair;
 }
 
 .slider-box {
