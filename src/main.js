@@ -236,10 +236,6 @@ buttons[5].addEventListener('click', () => { //clear grid
         buttons[5].classList.remove('btn-on');
     }, 700);
 
-    gridItems.forEach(gridItem => {
-        gridItem.classList.remove("transition-class");
-    })
-
     //reInitGrid();
 })
 
