@@ -46,7 +46,7 @@ function createGrid() {
 }
 
 function clearGrid() {
-    const gridItems = document.querySelectorAll('.grid-item'); //need to change this so that we don't keep creating a gridItems variable every time
+    gridItems = document.querySelectorAll('.grid-item'); //need to change this so that we don't keep creating a gridItems variable every time
     gridContainer.style.pointerEvents = 'none';
     gridItems.forEach(gridItem => {
         gridItem.classList.remove('changed');
@@ -69,7 +69,7 @@ function gridLineManipulation() {
         property = 'solid 1px';
     }
 
-    const gridItems = document.querySelectorAll('.grid-item'); //need to change this so that we don't keep creating a gridItems variable every time
+    gridItems = document.querySelectorAll('.grid-item'); //need to change this so that we don't keep creating a gridItems variable every time
 
     gridItems.forEach(gridItem => {
         gridItem.style.borderTop = property;
@@ -115,7 +115,7 @@ function handleMouseHover(event) {
 }
 
 function addGridEventListeners() { 
-    const gridItems = document.querySelectorAll('.grid-item');
+    gridItems = document.querySelectorAll('.grid-item');
 
     gridItems.forEach(gridItem => {
         gridItem.addEventListener('mousedown', handleMouseDown);
@@ -126,7 +126,7 @@ function addGridEventListeners() {
 }
 
 function removeGridEventListeners() { 
-    const gridItems = document.querySelectorAll('.grid-item');
+    gridItems = document.querySelectorAll('.grid-item');
 
     gridItems.forEach(gridItem => {
         gridItem.removeEventListener('mousedown', handleMouseDown);
@@ -138,7 +138,7 @@ function removeGridEventListeners() {
 
 // Function to delete all the div elements within the Grid
 function deleteGrid() {
-    const gridItems = document.querySelectorAll('.grid-item');
+    gridItems = document.querySelectorAll('.grid-item');
     
     // Remove each grid item from the grid container
     gridItems.forEach(gridItem => {
@@ -185,7 +185,7 @@ function checkButtons(buttonId) {
             variablesArray[i] = false;
             
         }
-        //console.log(variablesArray);
+        
     }
 }
 
@@ -238,7 +238,6 @@ buttons[5].addEventListener('click', () => { //clear grid
         buttons[5].classList.remove('btn-on');
     }, 700);
 
-    //reInitGrid();
 })
 
 // Add mouseup event listener to the entire document
