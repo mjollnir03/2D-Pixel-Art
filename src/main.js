@@ -47,16 +47,18 @@ function createGrid() {
 
 function clearGrid() {
     const gridItems = document.querySelectorAll('.grid-item'); //need to change this so that we don't keep creating a gridItems variable every time
-
+    gridContainer.style.pointerEvents = 'none';
     gridItems.forEach(gridItem => {
         gridItem.classList.remove('changed');
         gridItem.style.backgroundColor = bgPenColor;
         gridItem.classList.add("transition-class");
     })
-    setTimeout(function () {
+    
+    setTimeout(() => {
         gridItems.forEach(gridItem => {
             gridItem.classList.remove("transition-class");
-        })
+        });
+        gridContainer.style.pointerEvents = 'auto';
     }, 700);
 }
 
