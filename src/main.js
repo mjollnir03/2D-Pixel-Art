@@ -27,6 +27,16 @@ let toggleGrid = false;
 
 let variablesArray = [colorGrabber, colorFill, eraser, toggleRainbow];
 
+const rainbowColors = [
+    '#e81416', // Red
+    '#ffa500', // Orange
+    '#faeb36', // Yellow
+    '#79c314', // Green
+    '#487de7', // Blue
+    '#4b369d', // Indigo
+    '#70369d'  // Violet
+];
+
 const gridContainer = document.querySelector('.grid-container');
 
 // Function to create the Grid, bases on the gridValue variable
@@ -97,8 +107,14 @@ function handleMouseDown(event) { //main logic may have to implemented here
         event.target.classList.remove('changed');
     }
 
-    
+    // Handle the event when rainbow mode is toggled
+    if (toggleRainbow) {
+        // Select a random color from the rainbowColors array
+        const randomColor = rainbowColors[Math.floor(Math.random() * rainbowColors.length)];
+        event.target.style.backgroundColor = randomColor;
+    }
 
+    
     // Check if penColor is equal to bgPenColor
     if (penColor === bgPenColor) {
         // If they are equal, remove the 'changed' class from the target element
