@@ -18,14 +18,14 @@ const progressBar = document.getElementById('progress-bar'); //progress bar has 
 const rangeValue = document.querySelectorAll('.range-value'); //this is to display the actual size of the grid
 
 const buttons = document.getElementsByTagName('button');
-let colorGRabber = false;
+let colorGrabber = false;
 let colorFill = false;
 let eraser = false; 
 let toggleRainbow = false;
 let toggleGrid = false;
 
 
-let variablesArray = [colorGRabber, colorFill, eraser, toggleRainbow, toggleGrid];
+let variablesArray = [colorGrabber, colorFill, eraser, toggleRainbow];
 
 const gridContainer = document.querySelector('.grid-container');
 
@@ -88,17 +88,27 @@ function rgbToHex(rgbString) {
 }
 
 function handleMouseDown(event) { //main logic may have to implemented here
+
     // Set the background color of the target element
     event.target.style.backgroundColor = penColor;
+
+    if(eraser) { //handle the event when the eraser is toggled
+        event.target.style.backgroundColor = bgPenColor;
+        event.target.classList.remove('changed');
+    }
+
     
+
     // Check if penColor is equal to bgPenColor
     if (penColor === bgPenColor) {
         // If they are equal, remove the 'changed' class from the target element
         event.target.classList.remove('changed');
-    } else if(penColor !== bgPenColor) { // Second if statement so that future additions are easier to add
+    } else if(penColor !== bgPenColor && !eraser) { // Second if statement so that future additions are easier to add
         // Otherwise, add the 'changed' class to the target element
         event.target.classList.add('changed');
     }
+
+    console.log(colorGrabber, colorFill, eraser, toggleRainbow); // This will show the updated values
 
     // Set mouseDown to true
     mouseDown = true;
@@ -179,6 +189,7 @@ function checkButtons(buttonId) {
             buttons[i].classList.toggle('btn-on');
             variablesArray[i] = !variablesArray[i];
             
+            
         } else {
             // Remove the class for other buttons
             buttons[i].classList.remove('btn-on');
@@ -187,6 +198,8 @@ function checkButtons(buttonId) {
         }
         
     }
+    [colorGrabber, colorFill, eraser, toggleRainbow] = variablesArray;
+    
 }
 
 
