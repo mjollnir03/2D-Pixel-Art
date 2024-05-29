@@ -114,6 +114,10 @@ function handleMouseDown(event) { //main logic may have to implemented here
         event.target.style.backgroundColor = randomColor;
     }
 
+    if(colorFill) {
+
+    }
+
     
     // Check if penColor is equal to bgPenColor
     if (penColor === bgPenColor) {
@@ -124,7 +128,7 @@ function handleMouseDown(event) { //main logic may have to implemented here
         event.target.classList.add('changed');
     }
 
-    console.log(colorGrabber, colorFill, eraser, toggleRainbow); // This will show the updated values
+    
 
     // Set mouseDown to true
     mouseDown = true;
@@ -218,15 +222,8 @@ function checkButtons(buttonId) {
     
 }
 
-
-// EVENT LISTENERS
-
-colorSelect.addEventListener('input', () => {
-    penColor = colorSelect.value;
-});
-
-bgColorSelect.addEventListener('input', () => { // I will update this so that it will only change the gridItem when the 'changed' class is not present
-    bgPenColor = bgColorSelect.value; 
+function updateBackgroundColor() {
+    bgPenColor = bgColorSelect.value;
     const gridItems = document.querySelectorAll('.grid-item');
 
     gridItems.forEach(gridItem => {
@@ -234,7 +231,16 @@ bgColorSelect.addEventListener('input', () => { // I will update this so that it
             gridItem.style.backgroundColor = bgPenColor;
         }
     });
+}
+
+
+// EVENT LISTENERS
+
+colorSelect.addEventListener('input', () => {
+    penColor = colorSelect.value;
 });
+
+bgColorSelect.addEventListener('input', updateBackgroundColor);
 
 
 // The function below will also link to call the reInitGrid()
