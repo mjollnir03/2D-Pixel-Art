@@ -27,14 +27,15 @@ let toggleGrid = false;
 
 let variablesArray = [colorGrabber, colorFill, eraser, toggleRainbow];
 
-const rainbowColors = [
-    '#e81416', // Red
-    '#ffa500', // Orange
-    '#faeb36', // Yellow
-    '#79c314', // Green
-    '#487de7', // Blue
-    '#4b369d', // Indigo
-    '#70369d'  // Violet
+const rainbowColors = [ //found at https://colorkit.co/palette/ffadad-ffd6a5-fdffb6-caffbf-9bf6ff-a0c4ff-bdb2ff-ffc6ff/
+    '#ffadad', // Apricot Haze
+    '#ffd6a5', // Tuscan
+    '#fdffb6', // Parchment
+    '#caffbf', // Frosted Mint Hills
+    '#9bf6ff', // Eternal Winter
+    '#a0c4ff', // Pastel Blue
+    '#bdb2ff', // Purple Illusion
+    '#ffc6ff'  // Sugar Chic
 ];
 
 const gridContainer = document.querySelector('.grid-container');
