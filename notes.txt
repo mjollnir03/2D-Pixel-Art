@@ -1,1 +1,0 @@
-I will use standard HTML/CSS/JavaScript to create this project
