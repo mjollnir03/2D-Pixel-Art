@@ -5,4 +5,4 @@
 - Add References
 - Add Conclusion
 - (Upload to Github pages)
-- (Optimize JavaScript where applicable
+- (Optimize JavaScript where applicable)
