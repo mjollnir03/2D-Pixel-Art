@@ -20,7 +20,7 @@ const rangeValue = document.querySelectorAll('.range-value'); // this is to disp
 const buttons = document.getElementsByTagName('button');
 let colorGrabber = false;
 let colorFill = false;
-let eraser = false; 
+let eraser = false;
 let toggleRainbow = false;
 let toggleGrid = true;
 
@@ -94,10 +94,19 @@ function rgbToHex(rgbString) {
 }
 
 function handleMouseDown(event) {
+    if (colorGrabber) {
+        // Grab the color from the clicked element
+        const rgbColor = window.getComputedStyle(event.target).backgroundColor;
+        const hexColor = rgbToHex(rgbColor);
+        penColor = hexColor;
+        colorSelect.value = hexColor;
+        return;
+    }
+
     // Set the background color of the target element
     event.target.style.backgroundColor = penColor;
 
-    if(eraser) { // handle the event when the eraser is toggled
+    if (eraser) { // handle the event when the eraser is toggled
         event.target.style.backgroundColor = bgPenColor;
         event.target.classList.remove('changed');
     }
@@ -109,7 +118,7 @@ function handleMouseDown(event) {
         event.target.style.backgroundColor = randomColor;
     }
 
-    if(colorFill) {
+    if (colorFill) {
         fillGrid();
         return;
     }
@@ -118,7 +127,7 @@ function handleMouseDown(event) {
     if (penColor === bgPenColor) {
         // If they are equal, remove the 'changed' class from the target element
         event.target.classList.remove('changed');
-    } else if(penColor !== bgPenColor && !eraser) { // Second if statement so that future additions are easier to add
+    } else if (penColor !== bgPenColor && !eraser) { // Second if statement so that future additions are easier to add
         // Otherwise, add the 'changed' class to the target element
         event.target.classList.add('changed');
     }
@@ -249,12 +258,15 @@ buttons[4].addEventListener('click', () => { // toggle grid
     buttons[4].classList.toggle('btn-on');
     toggleGrid = !toggleGrid;
     // toggle grid functionality 
+
     gridLineManipulation();
 });
 
 buttons[5].addEventListener('click', () => { // clear grid
     buttons[5].classList.toggle('btn-on');
+    
     clearGrid();
+
     setTimeout(function () {
         buttons[5].classList.remove('btn-on');
     }, 700);
