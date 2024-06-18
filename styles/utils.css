@@ -1,0 +1,8 @@
+/* For future media query (980px size is the limit) */
+
+
+@media (max-width: 980px) {
+    .main-content {
+        display: none;
+    }
+}

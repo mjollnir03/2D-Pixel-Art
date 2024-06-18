@@ -204,6 +204,10 @@ input[type="range"]::-moz-range-thumb {
     transition : background-color 0.5s ease-out;
 }
 
+.message {
+    display: none;
+}
+
 /* ID'S */
 
 #color-fill {
