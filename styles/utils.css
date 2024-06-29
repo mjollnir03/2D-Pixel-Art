@@ -5,4 +5,8 @@
     .main-content {
         display: none;
     }
+
+    .message-container {
+        display: block;
+    }
 }
