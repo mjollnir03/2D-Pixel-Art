@@ -96,7 +96,7 @@ function rgbToHex(rgbString) {
 function handleMouseDown(event) {
     if (colorGrabber) {
         // Grab the color from the clicked element
-        const rgbColor = window.getComputedStyle(event.target).backgroundColor;
+        const rgbColor = window.getComputedStyle(event.target).backgroundColor; 
         const hexColor = rgbToHex(rgbColor);
         penColor = hexColor;
         colorSelect.value = hexColor;
@@ -272,6 +272,7 @@ buttons[5].addEventListener('click', () => { // clear grid
     }, 700);
 });
 
+// the following event listener was added to prompt a message to the user that only MOUSE input is allowed for the grid 
 gridContainer.addEventListener('touchstart', () => {
     window.alert("Please use a (MOUSE) to draw to the grid.\nTouch screen input is not compatible with the grid.\nWe are sorry for the inconvenience.");
 });
@@ -279,9 +280,8 @@ gridContainer.addEventListener('touchstart', () => {
 // Add mouseup event listener to the entire document
 document.addEventListener('mouseup', handleMouseUp);
 
-// FUNCTION CALLS
 
-// Initial Function call to make it that grid is created, and event listeners are added
-createGrid();
+// Initial Function calls 
+createGrid(); 
 addGridEventListeners();
 gridLineManipulation();
