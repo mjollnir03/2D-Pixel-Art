@@ -13,6 +13,7 @@
     --font-color: #FFCD4B;
     --background-color: #191919;
     --box-color: #262626;
+    --message-color: #F7F9F2;
 }
 
 
@@ -88,6 +89,11 @@ input[type="range"]::-moz-range-thumb {
     height: 20px;
     border-radius: 50%;
     background: var(--font-color);
+}
+
+/* Used for the GitHub link */
+a {
+    color: var(--font-color);
 }
 
 
@@ -209,7 +215,7 @@ input[type="range"]::-moz-range-thumb {
     margin-top: 20px;
 }
 .error-message {
-    color: var(--font-color);
+    color: var(--message-color);
     text-align: center;
     margin: 10px;
     font-family: "Nippo-Regular";
