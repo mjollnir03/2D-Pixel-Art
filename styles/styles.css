@@ -204,8 +204,14 @@ input[type="range"]::-moz-range-thumb {
     transition : background-color 0.5s ease-out;
 }
 
-.message {
+.message-container {
     display: none;
+}
+.error-message {
+    color: var(--font-color);
+    text-align: center;
+    margin: 10px;
+    font-family: "Nippo-Regular";
 }
 
 /* ID'S */
