@@ -272,6 +272,10 @@ buttons[5].addEventListener('click', () => { // clear grid
     }, 700);
 });
 
+gridContainer.addEventListener('touchstart', () => {
+    window.alert("Please use a (MOUSE) to draw to the grid.\nTouch screen input is not compatible with the grid.\nWe are sorry for the inconvenience.");
+});
+
 // Add mouseup event listener to the entire document
 document.addEventListener('mouseup', handleMouseUp);
 
