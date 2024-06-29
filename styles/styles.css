@@ -206,6 +206,7 @@ input[type="range"]::-moz-range-thumb {
 
 .message-container {
     display: none;
+    margin-top: 20px;
 }
 .error-message {
     color: var(--font-color);
