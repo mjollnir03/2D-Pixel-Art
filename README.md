@@ -1,7 +1,7 @@
 # 2D Pixel Art
 
 ## About
-- This project was created to showcase my growing abilities in using HTML, CSS, and JavaScript. It's a basic website titled "2D Pixel Art," inspired by "Pixilart.com," where users can create and export pixel art. Unlike "Pixilart.com," this project focuses on fundamental features built solely with HTML, CSS, and JavaScript, without external libraries.
+- This project was created to showcase my growing abilities in using HTML, CSS, and JavaScript. It's a basic website titled "2D Pixel Art," and inspired to create it because of "Pixilart.com," where users can create and export pixel art. Unlike "Pixilart.com," this project focuses on fundamental features built solely with HTML, CSS, and JavaScript, without external libraries.
 
 - The main takeaway from this project is the power of JavaScript in creating interactive and dynamic web experiences. It has deepened my understanding of how these languages collaborate to manipulate webpage elements, handle user input, and bring creative ideas to life. While it may not match the sophistication of more advanced tools, it demonstrates my foundational skills in web development. I am eager to expand my knowledge and explore advanced techniques and libraries in future projects.
 
