@@ -9,4 +9,29 @@
     .message-container {
         display: block;
     }
+
+     .message-container p {
+        font-size: 1.1rem;
+        line-height: 1.6;
+        margin-bottom: 1rem;
+        font-family: "Nippo-Regular", sans-serif;
+        color: var(--message-color);
+    }
+
+    .message-container a {
+        display: inline-block;
+        margin-top: 1.5rem;
+        padding: 0.75rem 1.5rem;
+        background-color: var(--font-color);
+        color: var(--background-color);
+        text-decoration: none;
+        border-radius: 4px;
+        font-family: "Nippo-Medium", sans-serif;
+        transition: background-color 0.3s ease, transform 0.2s ease;
+    }
+
+    .message-container a:hover {
+        background-color: #e0b642;
+        transform: translateY(-2px);
+    }
 }
