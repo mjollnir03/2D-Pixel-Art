@@ -8,7 +8,7 @@ const bgColorSelect = document.getElementById('bg-color-select'); // the bgColor
 
 let penColor = colorSelect.value; // the variable will take the value attribute from the colorSelect variable of type HTMLElement
 let bgPenColor = bgColorSelect.value; // the variable will take the value attribute from the bgColorSelect variable of type HTMLElement
-let mouseDown = false;
+let isDrawing = false;
 
 const rangeSlider = document.getElementById('range-slider'); // official input slider where we get the size of the grid from the user 
 let gridValue = rangeSlider.value; // get value from the actual input slider
@@ -93,47 +93,56 @@ function rgbToHex(rgbString) {
     return "#" + ((1 << 24) + (parseInt(rgb[1]) << 16) + (parseInt(rgb[2]) << 8) + parseInt(rgb[3])).toString(16).slice(1);
 }
 
-function handleMouseDown(event) {
+function handleStart(event) {
+    event.preventDefault();
+    isDrawing = true;
+    if (event.type === 'touchstart') {
+        const touch = event.touches[0];
+        const target = document.elementFromPoint(touch.clientX, touch.clientY);
+        handlePixelInteraction(target);
+    } else {
+        handlePixelInteraction(event.target);
+    }
+}
+
+function handleMove(event) {
+    if (!isDrawing) return;
+    event.preventDefault();
+    if (event.type === 'touchmove') {
+        const touch = event.touches[0];
+        const target = document.elementFromPoint(touch.clientX, touch.clientY);
+        handlePixelInteraction(target);
+    } else {
+        handlePixelInteraction(event.target);
+    }
+}
+
+function handleEnd() {
+    isDrawing = false;
+}
+
+function handlePixelInteraction(pixel) {
+    if (!pixel || !pixel.classList.contains('grid-item')) return;
+
     if (colorGrabber) {
-        // Grab the color from the clicked element
-        const rgbColor = window.getComputedStyle(event.target).backgroundColor; 
+        const rgbColor = window.getComputedStyle(pixel).backgroundColor;
         const hexColor = rgbToHex(rgbColor);
         penColor = hexColor;
         colorSelect.value = hexColor;
         return;
     }
 
-    // Set the background color of the target element
-    event.target.style.backgroundColor = penColor;
+    pixel.style.backgroundColor = eraser ? bgPenColor : (toggleRainbow ? rainbowColors[Math.floor(Math.random() * rainbowColors.length)] : penColor);
 
-    if (eraser) { // handle the event when the eraser is toggled
-        event.target.style.backgroundColor = bgPenColor;
-        event.target.classList.remove('changed');
-    }
-
-    // Handle the event when rainbow mode is toggled
-    if (toggleRainbow) {
-        // Select a random color from the rainbowColors array
-        const randomColor = rainbowColors[Math.floor(Math.random() * rainbowColors.length)];
-        event.target.style.backgroundColor = randomColor;
+    if (eraser || penColor === bgPenColor) {
+        pixel.classList.remove('changed');
+    } else {
+        pixel.classList.add('changed');
     }
 
     if (colorFill) {
         fillGrid();
-        return;
     }
-
-    // Check if penColor is equal to bgPenColor
-    if (penColor === bgPenColor) {
-        // If they are equal, remove the 'changed' class from the target element
-        event.target.classList.remove('changed');
-    } else if (penColor !== bgPenColor && !eraser) { // Second if statement so that future additions are easier to add
-        // Otherwise, add the 'changed' class to the target element
-        event.target.classList.add('changed');
-    }
-
-    // Set mouseDown to true
-    mouseDown = true;
 }
 
 function fillGrid() {
@@ -148,22 +157,14 @@ function fillGrid() {
     });
 }
 
-function handleMouseUp() { 
-    mouseDown = false; 
-}
-
-function handleMouseHover(event) {
-    if(mouseDown) {
-        handleMouseDown(event);
-    }
-}
-
 function addGridEventListeners() { 
     const gridItems = document.querySelectorAll('.grid-item');
 
     gridItems.forEach(gridItem => {
-        gridItem.addEventListener('mousedown', handleMouseDown);
-        gridItem.addEventListener('mouseenter', handleMouseHover);
+        gridItem.addEventListener('mousedown', handleStart);
+        gridItem.addEventListener('mousemove', handleMove);
+        gridItem.addEventListener('touchstart', handleStart);
+        gridItem.addEventListener('touchmove', handleMove);
     });
 }
 
@@ -171,8 +172,10 @@ function removeGridEventListeners() {
     const gridItems = document.querySelectorAll('.grid-item');
 
     gridItems.forEach(gridItem => {
-        gridItem.removeEventListener('mousedown', handleMouseDown);
-        gridItem.removeEventListener('mouseenter', handleMouseHover);
+        gridItem.removeEventListener('mousedown', handleStart);
+        gridItem.removeEventListener('mousemove', handleMove);
+        gridItem.removeEventListener('touchstart', handleStart);
+        gridItem.removeEventListener('touchmove', handleMove);
     });
 }
 
@@ -272,14 +275,9 @@ buttons[5].addEventListener('click', () => { // clear grid
     }, 700);
 });
 
-// the following event listener was added to prompt a message to the user that only MOUSE input is allowed for the grid 
-gridContainer.addEventListener('touchstart', () => {
-    window.alert("Please use a (MOUSE) to draw to the grid.\nTouch screen input is not compatible with the grid.\nWe are sorry for the inconvenience.");
-});
-
-// Add mouseup event listener to the entire document
-document.addEventListener('mouseup', handleMouseUp);
-
+// Add mouseup and touchend event listeners to the entire document
+document.addEventListener('mouseup', handleEnd);
+document.addEventListener('touchend', handleEnd);
 
 // Initial Function calls 
 createGrid(); 
