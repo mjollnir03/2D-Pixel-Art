@@ -5,6 +5,10 @@ This project was created to demonstrate my growing expertise in HTML, CSS, and J
 
 The primary goal of this project is to highlight the capabilities of JavaScript in building interactive and dynamic web experiences. Through this project, I have gained a deeper understanding of how HTML and CSS work in conjunction with JavaScript to manipulate the DOM, handle user inputs, and create visually engaging and functional web components. Although this project is more simplistic compared to professional-grade tools, it showcases my foundational skills in front-end development. I’m excited to continue improving, with plans to explore more advanced techniques and libraries in future projects.
 
+## Live App
+You can try out the **live version of the website** here:  
+👉 [**2D-Pixel-Art**](https://mjollnir03.github.io/2D-Pixel-Art/)
+
 ## Website Demo
 
 ### Sketch Simple 2D Pixel Art!
