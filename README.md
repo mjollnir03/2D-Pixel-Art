@@ -1,23 +1,28 @@
 # 2D Pixel Art
 
 ## About
-- This project was created to showcase my growing abilities in using HTML, CSS, and JavaScript. It's a basic website titled "2D Pixel Art," and inspired to create it because of "Pixilart.com," where users can create and export pixel art. Unlike "Pixilart.com," this project focuses on fundamental features built solely with HTML, CSS, and JavaScript, without external libraries.
+This project was created to demonstrate my growing expertise in HTML, CSS, and JavaScript. The website, titled "2D Pixel Art," was inspired by "Pixilart.com," a platform where users can create and export pixel art. However, unlike "Pixilart.com," this project focuses on implementing core features using only HTML, CSS, and JavaScript, without the aid of external libraries or frameworks. 
 
-- The main takeaway from this project is the power of JavaScript in creating interactive and dynamic web experiences. It has deepened my understanding of how these languages collaborate to manipulate webpage elements, handle user input, and bring creative ideas to life. While it may not match the sophistication of more advanced tools, it demonstrates my foundational skills in web development. I am eager to expand my knowledge and explore advanced techniques and libraries in future projects.
+The primary goal of this project is to highlight the capabilities of JavaScript in building interactive and dynamic web experiences. Through this project, I have gained a deeper understanding of how HTML and CSS work in conjunction with JavaScript to manipulate the DOM, handle user inputs, and create visually engaging and functional web components. Although this project is more simplistic compared to professional-grade tools, it showcases my foundational skills in front-end development. I’m excited to continue improving, with plans to explore more advanced techniques and libraries in future projects.
 
-- One limitation of this project is its reliance solely on mouse inputs, as it utilizes event listeners designed for mouse interaction. Touch inputs are not currently supported but may be considered for future implementation. Additionally, the webpage is not responsive, meaning it is not optimized for smaller devices. A special message alerts users if a small screen size is detected, informing them of the issue.
+## Website Demo
 
-## Demo
-- Link to the live app: [2D-Pixel-Art](https://mjollnir03.github.io/2D-Pixel-Art/)
-  ![Screenshot 2024-06-29 151501](https://github.com/mjollnir03/2D-Pixel-Art/assets/98365394/6144d28e-463a-4b77-8b88-6580fa5847bb)
+### Sketch Simple 2D Pixel Art!
+![Screenshot 2024-10-06 215645](https://github.com/user-attachments/assets/acac52e0-022a-45da-959c-bcb91d491f6d)
+_2D Pixel Art Drawing of a Dolphin_
 
 ## References
-- This project was originally part of "The Odin Project" titled Etch-a-Sketch. There are plenty of different implementations of this project. [The Odin Project](https://www.theodinproject.com/lessons/foundations-etch-a-sketch)
-- The HTML and CSS layout of this project was heavily influenced by Ben Scott's implementation and layout design. [Ben Scott's Implementation](https://benscott.dev)
+This project began as part of "The Odin Project," specifically the Etch-a-Sketch assignment. The Odin Project encourages students to build and create unique implementations of the task, and this project is one such result. You can explore more about the project here: [The Odin Project](https://www.theodinproject.com/lessons/foundations-etch-a-sketch).
+
+In addition, the design and layout of this project have been heavily inspired by Ben Scott’s approach to the Etch-a-Sketch project. His implementation provided a clear and structured way to organize the layout using HTML and CSS. You can see his work here: [Ben Scott's Implementation](https://benscott.dev).
 
 ## Conclusion
-- This project has been a significant learning experience, allowing me to apply and improve my HTML, CSS, and JavaScript skills. While it has its limitations, it serves as a solid foundation for my journey in web development. I look forward to enhancing this project by adding support for touch inputs and making the webpage responsive. Additionally, I am excited to continue learning and applying more advanced techniques and libraries in future projects.
+This project has been a significant learning experience, allowing me to deepen my understanding of how JavaScript works, including its semantics, structure, and capabilities. Throughout this process, I’ve gained hands-on experience with DOM manipulation, event handling, and how JavaScript interacts with HTML and CSS to create dynamic and interactive web applications.
+
+While there are still areas for optimization, this project represents a solid foundation for my web development journey. I’m excited to continue learning and applying more advanced JavaScript techniques, as well as exploring additional libraries and frameworks in future projects.
 
 ## Work in Progress
-- Optimize JavaScript where applicable
+- **JavaScript Optimization**: I aim to refine the code, optimizing where necessary to improve performance and maintainability.
+- **Mobile Support**: Adding the ability to draw on smaller screens is a planned enhancement. This will involve revisiting the fundamental design of the grid and adapting it for touch input, which requires rethinking the overall layout and interaction patterns.
+
 
