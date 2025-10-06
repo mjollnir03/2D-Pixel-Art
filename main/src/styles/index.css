@@ -36,10 +36,12 @@
   --font-pixel: "Pixelify Sans", ui-sans-serif, system-ui, sans-serif;
   --color-background: #171717; /* neutral-900 */
   --color-text: #fafaf9; /* stone-50 */
+  --text-default: clamp(15px, 1.2vw + 12px, 18px);
 }
 
 html {
   background-color: var(--color-background);
   color: var(--color-text);
   font-family: var(--font-pixel);
+  font-size: var(--text-default);
 }
