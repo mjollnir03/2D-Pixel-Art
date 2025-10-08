@@ -12,14 +12,23 @@ function App() {
 
         {/* Main Content */}
         <div>
-          <div className="flex justify-center items-center p-2 gap-2">
-            {/* Top Row */}
-            {/* Button should have gray background, white border, and white on hover and selected */}
-            <button>Pen</button>
-            <button>Eraser</button>
-            <button>Bucket</button>
-            <button>Canvas-Color</button>
-            <button>Pen-Color</button>
+          <div className="flex flex-wrap justify-center items-center p-2 gap-4">
+            {/* Tool Buttons */}
+            <button className="border-2 border-white px-4 py-3 text-lg uppercase transition-colors duration-200 bg-[#4a4a4a] text-white hover:bg-white hover:text-black">
+              Pen
+            </button>
+            <button className="border-2 border-white px-4 py-3 text-lg uppercase transition-colors duration-200 bg-[#4a4a4a] text-white hover:bg-white hover:text-black">
+              Eraser
+            </button>
+            <button className="border-2 border-white px-4 py-3 text-lg uppercase transition-colors duration-200 bg-[#4a4a4a] text-white hover:bg-white hover:text-black">
+              Bucket
+            </button>
+            <button className="border-2 border-white px-4 py-3 text-lg uppercase transition-colors duration-200 bg-[#4a4a4a] text-white hover:bg-white hover:text-black">
+              Canvas-Color
+            </button>
+            <button className="border-2 border-white px-4 py-3 text-lg uppercase transition-colors duration-200 bg-[#4a4a4a] text-white hover:bg-white hover:text-black">
+              Pen-Color
+            </button>
           </div>
 
           {/* Undo Button */}
