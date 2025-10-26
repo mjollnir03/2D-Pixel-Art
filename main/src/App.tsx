@@ -5,47 +5,40 @@ import Button from "./components/Button";
 
 function App() {
   return (
-    <>
-      {/* Webpage */}
-      <div className="flex flex-col h-screen">
-        {/* Header */}
+    <div className="flex flex-col min-h-screen">
+      <main className="mx-auto max-w-screen-xl px-4 sm:px-6 md:px-8 flex-1">
+        {/* match header container width */}
         <Header />
+        {/* Top tools */}
+        <div className="flex flex-wrap justify-center items-center gap-3 sm:gap-4 md:gap-6 py-2">
+          <Button>Pen</Button>
+          <Button>Eraser</Button>
+          <Button>Bucket</Button>
+          <Button>Canvas-Color</Button>
+          <Button>Pen-Color</Button>
+        </div>
 
-        {/* Main Content */}
-        <div className="flex-1">
-          {/* Top tools */}
-          <div className="flex flex-wrap justify-center items-center p-2 gap-4">
-            <Button>Pen</Button>
-            <Button>Eraser</Button>
-            <Button>Bucket</Button>
-            <Button>Canvas-Color</Button>
-            <Button>Pen-Color</Button>
-          </div>
-
-          {/* Canvas + side buttons*/}
-          <div className="w-full flex justify-center p-4">
-            <div className="grid grid-cols-[auto_auto_auto] items-center gap-6">
-              <Button>Undo</Button>
-
-              {/* Canvas  */}
-              <Canvas />
-
-              <Button>Redo</Button>
-            </div>
-          </div>
-
-          {/* Bottom Row */}
-          <div className="w-full flex justify-center">
-            <div className="flex flex-wrap justify-center items-center gap-4 p-3">
-              <Button>Save</Button>
-              <Button>Load</Button>
-              <Button>Canvas-Size</Button>
-              <Button>Line-Toggle</Button>
-            </div>
+        {/* Canvas + side buttons */}
+        <div className="w-full flex justify-center p-4">
+          <div className="grid grid-cols-1 md:grid-cols-[auto_1fr_auto] items-center gap-4 md:gap-6">
+            <Button className="self-center justify-self-center">Undo</Button>
+            <Canvas />
+            <Button className="self-center justify-self-center">Redo</Button>
           </div>
         </div>
-      </div>
-    </>
+
+        {/* Bottom row */}
+        <div className="w-full flex justify-center">
+          <div className="flex flex-wrap justify-center items-center gap-3 sm:gap-4 md:gap-6 p-3">
+            <Button>Save</Button>
+            <Button>Load</Button>
+            <Button>Canvas-Size</Button>
+            <Button>Line-Toggle</Button>
+            <Button>Reset-Canvas</Button>
+          </div>
+        </div>
+      </main>
+    </div>
   );
 }
 
