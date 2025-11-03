@@ -2,10 +2,14 @@ import "./styles/App.css";
 import Header from "./components/Header";
 import Canvas from "./components/Canvas";
 import Button from "./components/Button";
+import ColorPicker from "./components/ColorPicker";
 import { useState } from "react";
 
 function App() {
   const [showGrid, setShowGrid] = useState(false);
+  const [resetCanvas, setResetCanvas] = useState(false);
+  const [penColor, setPenColor] = useState("#000000");
+  const [canvasColor, setCanvasColor] = useState("#ffffff");
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -17,15 +21,28 @@ function App() {
           <Button>Pen</Button>
           <Button>Eraser</Button>
           <Button>Bucket</Button>
-          <Button>Canvas-Color</Button>
-          <Button>Pen-Color</Button>
+          <ColorPicker
+            color={penColor}
+            onChange={setPenColor}
+            label="Pen Color"
+          />
+          <ColorPicker
+            color={canvasColor}
+            onChange={setCanvasColor}
+            label="Canvas Color"
+          />
         </div>
 
         {/* Canvas + side buttons */}
         <div className="w-full flex justify-center p-4">
           <div className="grid grid-cols-1 md:grid-cols-[auto_1fr_auto] items-center gap-4 md:gap-6">
             <Button className="self-center justify-self-center">Undo</Button>
-            <Canvas showGrid={showGrid} />
+            <Canvas
+              showGrid={showGrid}
+              resetCanvas={resetCanvas}
+              penColor={penColor}
+              canvasColor={canvasColor}
+            />
             <Button className="self-center justify-self-center">Redo</Button>
           </div>
         </div>
@@ -37,7 +54,9 @@ function App() {
             <Button>Load</Button>
             <Button>Canvas-Size</Button>
             <Button onClick={() => setShowGrid(!showGrid)}>Line-Toggle</Button>
-            <Button>Reset-Canvas</Button>
+            <Button onClick={() => setResetCanvas(!resetCanvas)}>
+              Reset-Canvas
+            </Button>
           </div>
         </div>
       </main>
