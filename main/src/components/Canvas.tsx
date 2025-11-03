@@ -2,51 +2,74 @@ import { useEffect, useRef, useState } from "react";
 
 type CanvasProps = {
   showGrid?: boolean;
+  resetCanvas?: boolean;
+  penColor?: string;
+  canvasColor?: string;
 };
 
-export default function Canvas({ showGrid }: CanvasProps) {
-  // const { innerWidth, innerHeight } = window;
-  let canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const [pixelSize, setPixelSize] = useState(20); // Size of each pixel (adjustable)
+export default function Canvas({
+  showGrid,
+  resetCanvas,
+  penColor = "#000000",
+  canvasColor = "#ffffff",
+}: CanvasProps) {
+  const drawCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const gridCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const [pixelSize, setPixelSize] = useState(20);
   const [isDrawing, setIsDrawing] = useState(false);
 
+  // Initialize draw canvas and handle resets
   useEffect(() => {
-    const canvas = canvasRef.current;
+    const canvas = drawCanvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    // Set canvas resolution 
     canvas.width = 800;
     canvas.height = 800;
-
-    // Disable smoothing for crisp pixels
     ctx.imageSmoothingEnabled = false;
 
-    // Clear the canvas
+    // Fill with background color
+    ctx.fillStyle = canvasColor;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }, [resetCanvas, canvasColor]);
+
+  // Initialize and redraw grid separately
+  useEffect(() => {
+    const canvas = gridCanvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    canvas.width = 800;
+    canvas.height = 800;
+    ctx.imageSmoothingEnabled = false;
+
+    // Clear grid canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Draw grid if enabled
     if (showGrid) {
-      ctx.strokeStyle = "black";
-      ctx.lineWidth = 1;
-      for (let x = 0; x < canvas.width; x += pixelSize) {
+      ctx.strokeStyle = "#000000";
+      ctx.lineWidth = 0.5;
+
+      for (let x = 0; x <= canvas.width; x += pixelSize) {
         ctx.beginPath();
         ctx.moveTo(x, 0);
         ctx.lineTo(x, canvas.height);
         ctx.stroke();
       }
-      for (let y = 0; y < canvas.height; y += pixelSize) {
+
+      for (let y = 0; y <= canvas.height; y += pixelSize) {
         ctx.beginPath();
         ctx.moveTo(0, y);
         ctx.lineTo(canvas.width, y);
         ctx.stroke();
       }
     }
-  }, [pixelSize, showGrid]); // Added showGrid to dependencies
+  }, [showGrid, pixelSize]);
 
   const drawPixel = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    const canvas = canvasRef.current;
+    const canvas = drawCanvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
@@ -55,25 +78,33 @@ export default function Canvas({ showGrid }: CanvasProps) {
     const x = Math.floor((e.clientX - rect.left) / pixelSize) * pixelSize;
     const y = Math.floor((e.clientY - rect.top) / pixelSize) * pixelSize;
 
-    ctx.fillStyle = "black"; // Change to desired color
+    ctx.fillStyle = penColor;
     ctx.fillRect(x, y, pixelSize, pixelSize);
   };
 
   return (
     <div className="flex justify-center items-center w-full">
-      <canvas
-        ref={canvasRef}
-        className="bg-white shadow-md border border-gray-400 cursor-crosshair"
-        onMouseDown={(e) => {
-          setIsDrawing(true);
-          drawPixel(e);
-        }}
-        onMouseMove={(e) => {
-          if (isDrawing) drawPixel(e);
-        }}
-        onMouseUp={() => setIsDrawing(false)}
-        onMouseLeave={() => setIsDrawing(false)}
-      />
+      <div className="relative inline-block">
+        {/* Drawing canvas */}
+        <canvas
+          ref={drawCanvasRef}
+          className="cursor-crosshair"
+          onMouseDown={(e) => {
+            setIsDrawing(true);
+            drawPixel(e);
+          }}
+          onMouseMove={(e) => {
+            if (isDrawing) drawPixel(e);
+          }}
+          onMouseUp={() => setIsDrawing(false)}
+          onMouseLeave={() => setIsDrawing(false)}
+        />
+        {/* Grid overlay canvas */}
+        <canvas
+          ref={gridCanvasRef}
+          className="absolute top-0 left-0 cursor-crosshair pointer-events-none"
+        />
+      </div>
     </div>
   );
 }
