@@ -46,6 +46,8 @@ function App() {
               canvasColor={canvasColor}
               saveCanvas={saveCanvas}
               loadCanvas={loadCanvas}
+              onSaveComplete={() => setSaveCanvas(false)}
+              onLoadComplete={() => setLoadCanvas(false)}
             />
             <Button className="self-center justify-self-center">Redo</Button>
           </div>
@@ -54,8 +56,8 @@ function App() {
         {/* Bottom row */}
         <div className="w-full flex justify-center">
           <div className="flex flex-wrap justify-center items-center gap-3 sm:gap-4 md:gap-6 p-3">
-            <Button onClick={() => setSaveCanvas(!saveCanvas)}>Save</Button>
-            <Button onClick={() => setLoadCanvas(!loadCanvas)}>Load</Button>
+            <Button onClick={() => setSaveCanvas(true)}>Save</Button>
+            <Button onClick={() => setLoadCanvas(true)}>Load</Button>
             <Button>Canvas-Size</Button>
             <Button onClick={() => setShowGrid(!showGrid)}>Line-Toggle</Button>
             <Button onClick={() => setResetCanvas(!resetCanvas)}>
