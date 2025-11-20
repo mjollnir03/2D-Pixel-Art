@@ -7,8 +7,6 @@ type CanvasProps = {
   canvasColor?: string;
   saveCanvas?: boolean;
   loadCanvas?: boolean;
-  onSaveComplete?: () => void; // New prop
-  onLoadComplete?: () => void; // New prop
 };
 
 export default function Canvas({
@@ -18,20 +16,12 @@ export default function Canvas({
   canvasColor = "#ffffff",
   saveCanvas = false,
   loadCanvas = false,
-  onSaveComplete,
-  onLoadComplete,
 }: CanvasProps) {
   const drawCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const gridCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [pixelSize, setPixelSize] = useState(20);
   const [isDrawing, setIsDrawing] = useState(false);
-
-  try {
-    console.log(loadCanvas, saveCanvas, showGrid);
-  } catch (e) {
-    console.error(e);
-  }
   // Initialize draw canvas
   useEffect(() => {
     const canvas = drawCanvasRef.current;
@@ -93,21 +83,15 @@ export default function Canvas({
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-
-      // Notify parent that save is done
-      if (onSaveComplete) onSaveComplete();
     }
-  }, [saveCanvas, onSaveComplete]);
+  }, [saveCanvas]);
 
   // Load canvas from PNG
   useEffect(() => {
     if (loadCanvas && fileInputRef.current) {
       fileInputRef.current.click();
-
-      // Notify parent that load trigger is done
-      if (onLoadComplete) onLoadComplete();
     }
-  }, [loadCanvas, onLoadComplete]);
+  }, [loadCanvas]);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
