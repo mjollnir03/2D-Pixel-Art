@@ -6,6 +6,7 @@ type CanvasProps = {
   penColor?: string;
   canvasColor?: string;
   saveCanvas?: boolean;
+  loadCanvas?: boolean;
 };
 
 export default function Canvas({
@@ -14,6 +15,7 @@ export default function Canvas({
   penColor = "#000000",
   canvasColor = "#ffffff",
   saveCanvas = false,
+  loadCanvas = false,
 }: CanvasProps) {
   const drawCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const gridCanvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -85,6 +87,12 @@ export default function Canvas({
       }
     }
   }, [saveCanvas]);
+
+  // load canvas functionality
+  useEffect(() => {
+    if (loadCanvas) {
+    }
+  }, [loadCanvas]);
 
   const drawPixel = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = drawCanvasRef.current;

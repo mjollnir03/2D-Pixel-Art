@@ -10,7 +10,8 @@ function App() {
   const [resetCanvas, setResetCanvas] = useState(false);
   const [penColor, setPenColor] = useState("#000000");
   const [canvasColor, setCanvasColor] = useState("#ffffff");
-  const [saveCanvas, downloadCanvas] = useState(false);
+  const [saveCanvas, setSaveCanvas] = useState(false);
+  const [loadCanvas, setLoadCanvas] = useState(false);
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -52,8 +53,8 @@ function App() {
         {/* Bottom row */}
         <div className="w-full flex justify-center">
           <div className="flex flex-wrap justify-center items-center gap-3 sm:gap-4 md:gap-6 p-3">
-            <Button onClick={() => downloadCanvas(!saveCanvas)}>Save</Button>
-            <Button>Load</Button>
+            <Button onClick={() => setSaveCanvas(!saveCanvas)}>Save</Button>
+            <Button onClick={() => setLoadCanvas(!loadCanvas)}>Load</Button>
             <Button>Canvas-Size</Button>
             <Button onClick={() => setShowGrid(!showGrid)}>Line-Toggle</Button>
             <Button onClick={() => setResetCanvas(!resetCanvas)}>
