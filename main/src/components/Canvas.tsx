@@ -5,6 +5,7 @@ type CanvasProps = {
   resetCanvas?: boolean;
   penColor?: string;
   canvasColor?: string;
+  saveCanvas?: boolean;
 };
 
 export default function Canvas({
@@ -12,6 +13,7 @@ export default function Canvas({
   resetCanvas,
   penColor = "#000000",
   canvasColor = "#ffffff",
+  saveCanvas = false,
 }: CanvasProps) {
   const drawCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const gridCanvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -67,6 +69,22 @@ export default function Canvas({
       }
     }
   }, [showGrid, pixelSize]);
+
+  useEffect(() => {
+    if (saveCanvas) {
+      const canvas = drawCanvasRef.current;
+      let data = canvas?.toDataURL("image/png");
+      // Trigger download
+      if (data) {
+        const link = document.createElement("a");
+        link.href = data;
+        link.download = "canvas.png";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+    }
+  }, [saveCanvas]);
 
   const drawPixel = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = drawCanvasRef.current;

@@ -10,6 +10,7 @@ function App() {
   const [resetCanvas, setResetCanvas] = useState(false);
   const [penColor, setPenColor] = useState("#000000");
   const [canvasColor, setCanvasColor] = useState("#ffffff");
+  const [saveCanvas, downloadCanvas] = useState(false);
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -42,6 +43,7 @@ function App() {
               resetCanvas={resetCanvas}
               penColor={penColor}
               canvasColor={canvasColor}
+              saveCanvas={saveCanvas}
             />
             <Button className="self-center justify-self-center">Redo</Button>
           </div>
@@ -50,7 +52,7 @@ function App() {
         {/* Bottom row */}
         <div className="w-full flex justify-center">
           <div className="flex flex-wrap justify-center items-center gap-3 sm:gap-4 md:gap-6 p-3">
-            <Button>Save</Button>
+            <Button onClick={() => downloadCanvas(!saveCanvas)}>Save</Button>
             <Button>Load</Button>
             <Button>Canvas-Size</Button>
             <Button onClick={() => setShowGrid(!showGrid)}>Line-Toggle</Button>
