@@ -19,10 +19,10 @@ export default function Canvas({
 }: CanvasProps) {
   const drawCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const gridCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [pixelSize, setPixelSize] = useState(20);
   const [isDrawing, setIsDrawing] = useState(false);
-
-  // Initialize draw canvas and handle resets
+  // Initialize draw canvas
   useEffect(() => {
     const canvas = drawCanvasRef.current;
     if (!canvas) return;
@@ -33,12 +33,12 @@ export default function Canvas({
     canvas.height = 800;
     ctx.imageSmoothingEnabled = false;
 
-    // Fill with background color
+    // Fill background
     ctx.fillStyle = canvasColor;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
   }, [resetCanvas, canvasColor]);
 
-  // Initialize and redraw grid separately
+  // Grid setup
   useEffect(() => {
     const canvas = gridCanvasRef.current;
     if (!canvas) return;
@@ -48,8 +48,6 @@ export default function Canvas({
     canvas.width = 800;
     canvas.height = 800;
     ctx.imageSmoothingEnabled = false;
-
-    // Clear grid canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     if (showGrid) {
@@ -72,27 +70,50 @@ export default function Canvas({
     }
   }, [showGrid, pixelSize]);
 
+  // Save canvas as PNG
   useEffect(() => {
     if (saveCanvas) {
       const canvas = drawCanvasRef.current;
-      let data = canvas?.toDataURL("image/png");
-      // Trigger download
-      if (data) {
-        const link = document.createElement("a");
-        link.href = data;
-        link.download = "canvas.png";
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      }
+      if (!canvas) return;
+
+      const data = canvas.toDataURL("image/png");
+      const link = document.createElement("a");
+      link.href = data;
+      link.download = "canvas.png";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
   }, [saveCanvas]);
 
-  // load canvas functionality
+  // Load canvas from PNG
   useEffect(() => {
-    if (loadCanvas) {
+    if (loadCanvas && fileInputRef.current) {
+      fileInputRef.current.click();
     }
   }, [loadCanvas]);
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.type !== "image/png") {
+      alert("Please select a PNG image.");
+      return;
+    }
+
+    const bitmap = await createImageBitmap(file);
+    const canvas = drawCanvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    // Draw image on canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+
+    // Reset input so the same file can be chosen again
+    e.target.value = "";
+  };
 
   const drawPixel = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = drawCanvasRef.current;
@@ -111,6 +132,15 @@ export default function Canvas({
   return (
     <div className="flex justify-center items-center w-full">
       <div className="relative inline-block">
+        {/* Hidden file input for loading PNG */}
+        <input
+          type="file"
+          accept="image/png"
+          ref={fileInputRef}
+          style={{ display: "none" }}
+          onChange={handleFileChange}
+        />
+
         {/* Drawing canvas */}
         <canvas
           ref={drawCanvasRef}
@@ -125,7 +155,8 @@ export default function Canvas({
           onMouseUp={() => setIsDrawing(false)}
           onMouseLeave={() => setIsDrawing(false)}
         />
-        {/* Grid overlay canvas */}
+
+        {/* Grid overlay */}
         <canvas
           ref={gridCanvasRef}
           className="absolute top-0 left-0 cursor-crosshair pointer-events-none"

@@ -45,6 +45,7 @@ function App() {
               penColor={penColor}
               canvasColor={canvasColor}
               saveCanvas={saveCanvas}
+              loadCanvas={loadCanvas}
             />
             <Button className="self-center justify-self-center">Redo</Button>
           </div>
