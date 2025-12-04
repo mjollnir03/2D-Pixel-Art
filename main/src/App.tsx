@@ -8,12 +8,21 @@ import { useState } from "react";
 type Tool = "pen" | "eraser" | "bucket";
 
 function App() {
+  // Initialize based on screen size
+  const getInitialCanvasSize = () => {
+    const width = window.innerWidth;
+    if (width < 640) return 400; // mobile
+    if (width < 1024) return 600; // tablet
+    return 800; // desktop
+  };
+
   const [showGrid, setShowGrid] = useState(false);
   const [penColor, setPenColor] = useState("#000000");
   const [canvasColor, setCanvasColor] = useState("#ffffff");
   const [selectedTool, setSelectedTool] = useState<Tool>("pen");
-  const [canvasSize, setCanvasSize] = useState(800);
-  const [pixelSize] = useState(20);
+  const [canvasSize, setCanvasSize] = useState(getInitialCanvasSize());
+  // Pixel size is 1/40th of canvas size (400->10, 600->15, 800->20, 1000->25)
+  const pixelSize = canvasSize / 40;
   const [triggerSave, setTriggerSave] = useState(0);
   const [triggerLoad, setTriggerLoad] = useState(0);
   const [triggerReset, setTriggerReset] = useState(0);
