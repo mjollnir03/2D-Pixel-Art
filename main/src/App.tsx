@@ -47,7 +47,7 @@ function App() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen select-none">
       <main className="mx-auto max-w-screen-xl px-4 sm:px-6 md:px-8 flex-1">
         {/* match header container width */}
         <Header />

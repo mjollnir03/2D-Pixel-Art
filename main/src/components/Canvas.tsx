@@ -35,6 +35,7 @@ export default function Canvas({
   const [isDrawing, setIsDrawing] = useState(false);
   const [history, setHistory] = useState<ImageData[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
+  const [previousCanvasColor, setPreviousCanvasColor] = useState(canvasColor);
   // Save current state to history
   const saveToHistory = () => {
     const canvas = drawCanvasRef.current;
@@ -74,11 +75,12 @@ export default function Canvas({
     ctx.fillStyle = canvasColor;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Save initial state
+    // Save initial state and update previous color
     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
     setHistory([imageData]);
     setHistoryIndex(0);
-  }, [triggerReset, canvasColor, canvasSize]);
+    setPreviousCanvasColor(canvasColor);
+  }, [triggerReset, canvasSize]);
 
   // Grid setup
   useEffect(() => {
@@ -111,7 +113,48 @@ export default function Canvas({
       }
     }
   }, [showGrid, pixelSize, canvasSize]);
-  
+
+  // Update canvas background color when it changes
+  useEffect(() => {
+    if (previousCanvasColor === canvasColor) return;
+
+    const canvas = drawCanvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    // Get current canvas data
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const data = imageData.data;
+
+    // Convert previous and new colors from hex to RGB
+    const oldR = parseInt(previousCanvasColor.slice(1, 3), 16);
+    const oldG = parseInt(previousCanvasColor.slice(3, 5), 16);
+    const oldB = parseInt(previousCanvasColor.slice(5, 7), 16);
+
+    const newR = parseInt(canvasColor.slice(1, 3), 16);
+    const newG = parseInt(canvasColor.slice(3, 5), 16);
+    const newB = parseInt(canvasColor.slice(5, 7), 16);
+
+    // Replace all pixels that match the old canvas color with the new color
+    for (let i = 0; i < data.length; i += 4) {
+      if (
+        data[i] === oldR &&
+        data[i + 1] === oldG &&
+        data[i + 2] === oldB &&
+        data[i + 3] === 255
+      ) {
+        data[i] = newR;
+        data[i + 1] = newG;
+        data[i + 2] = newB;
+      }
+    }
+
+    ctx.putImageData(imageData, 0, 0);
+    setPreviousCanvasColor(canvasColor);
+    saveToHistory();
+  }, [canvasColor]);
+
   // Save canvas as PNG
   useEffect(() => {
     if (triggerSave > 0) {
@@ -166,26 +209,37 @@ export default function Canvas({
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
     if (file.type !== "image/png") {
-      alert("Please select a PNG image.");
+      alert("Invalid file type. Please select a PNG image.");
+      e.target.value = "";
       return;
     }
 
-    const bitmap = await createImageBitmap(file);
-    const canvas = drawCanvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+    try {
+      const bitmap = await createImageBitmap(file);
+      const canvas = drawCanvasRef.current;
+      if (!canvas) {
+        alert("Canvas not ready. Please try again.");
+        return;
+      }
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        alert("Failed to load canvas context.");
+        return;
+      }
 
-    // Draw image on canvas
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-
-    // Save to history
-    saveToHistory();
-
-    // Reset input so the same file can be chosen again
-    e.target.value = "";
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+      saveToHistory();
+      e.target.value = "";
+    } catch (error) {
+      console.error("Failed to load image:", error);
+      alert(
+        "Failed to load the image. The file may be corrupted or incompatible."
+      );
+      e.target.value = "";
+    }
   };
 
   const bucketFill = (startX: number, startY: number) => {
