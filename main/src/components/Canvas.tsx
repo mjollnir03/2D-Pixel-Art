@@ -40,7 +40,7 @@ export default function Canvas({
   const saveToHistory = () => {
     const canvas = drawCanvasRef.current;
     if (!canvas) return;
-    const ctx = canvas.getContext("2d");
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
     if (!ctx) return;
 
     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
@@ -64,7 +64,7 @@ export default function Canvas({
   useEffect(() => {
     const canvas = drawCanvasRef.current;
     if (!canvas) return;
-    const ctx = canvas.getContext("2d");
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
     if (!ctx) return;
 
     canvas.width = canvasSize;
@@ -120,7 +120,7 @@ export default function Canvas({
 
     const canvas = drawCanvasRef.current;
     if (!canvas) return;
-    const ctx = canvas.getContext("2d");
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
     if (!ctx) return;
 
     // Get current canvas data
@@ -183,7 +183,7 @@ export default function Canvas({
     if (triggerUndo > 0 && historyIndex > 0) {
       const canvas = drawCanvasRef.current;
       if (!canvas) return;
-      const ctx = canvas.getContext("2d");
+      const ctx = canvas.getContext("2d", { willReadFrequently: true });
       if (!ctx) return;
 
       const newIndex = historyIndex - 1;
@@ -197,7 +197,7 @@ export default function Canvas({
     if (triggerRedo > 0 && historyIndex < history.length - 1) {
       const canvas = drawCanvasRef.current;
       if (!canvas) return;
-      const ctx = canvas.getContext("2d");
+      const ctx = canvas.getContext("2d", { willReadFrequently: true });
       if (!ctx) return;
 
       const newIndex = historyIndex + 1;
@@ -245,7 +245,7 @@ export default function Canvas({
   const bucketFill = (startX: number, startY: number) => {
     const canvas = drawCanvasRef.current;
     if (!canvas) return;
-    const ctx = canvas.getContext("2d");
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
     if (!ctx) return;
 
     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
