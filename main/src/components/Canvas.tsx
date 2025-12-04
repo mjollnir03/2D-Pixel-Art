@@ -1,27 +1,64 @@
 import { useEffect, useRef, useState } from "react";
 
+type Tool = "pen" | "eraser" | "bucket";
+
 type CanvasProps = {
   showGrid?: boolean;
-  resetCanvas?: boolean;
   penColor?: string;
   canvasColor?: string;
-  saveCanvas?: boolean;
-  loadCanvas?: boolean;
+  selectedTool?: Tool;
+  canvasSize?: number;
+  pixelSize?: number;
+  triggerSave?: number;
+  triggerLoad?: number;
+  triggerReset?: number;
+  triggerUndo?: number;
+  triggerRedo?: number;
 };
 
 export default function Canvas({
   showGrid,
-  resetCanvas,
   penColor = "#000000",
   canvasColor = "#ffffff",
-  saveCanvas = false,
-  loadCanvas = false,
+  selectedTool = "pen",
+  canvasSize = 800,
+  pixelSize = 20,
+  triggerSave = 0,
+  triggerLoad = 0,
+  triggerReset = 0,
+  triggerUndo = 0,
+  triggerRedo = 0,
 }: CanvasProps) {
   const drawCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const gridCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const [pixelSize, setPixelSize] = useState(20);
   const [isDrawing, setIsDrawing] = useState(false);
+  const [history, setHistory] = useState<ImageData[]>([]);
+  const [historyIndex, setHistoryIndex] = useState(-1);
+  // Save current state to history
+  const saveToHistory = () => {
+    const canvas = drawCanvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    setHistory((prev) => {
+      const newHistory = prev.slice(0, historyIndex + 1);
+      newHistory.push(imageData);
+      // Limit history to 50 states
+      if (newHistory.length > 50) {
+        newHistory.shift();
+        return newHistory;
+      }
+      return newHistory;
+    });
+    setHistoryIndex((prev) => {
+      const newIndex = prev + 1;
+      return newIndex >= 50 ? 49 : newIndex;
+    });
+  };
+
   // Initialize draw canvas
   useEffect(() => {
     const canvas = drawCanvasRef.current;
@@ -29,14 +66,19 @@ export default function Canvas({
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    canvas.width = 800;
-    canvas.height = 800;
+    canvas.width = canvasSize;
+    canvas.height = canvasSize;
     ctx.imageSmoothingEnabled = false;
 
     // Fill background
     ctx.fillStyle = canvasColor;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-  }, [resetCanvas, canvasColor]);
+
+    // Save initial state
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    setHistory([imageData]);
+    setHistoryIndex(0);
+  }, [triggerReset, canvasColor, canvasSize]);
 
   // Grid setup
   useEffect(() => {
@@ -45,13 +87,13 @@ export default function Canvas({
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    canvas.width = 800;
-    canvas.height = 800;
+    canvas.width = canvasSize;
+    canvas.height = canvasSize;
     ctx.imageSmoothingEnabled = false;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     if (showGrid) {
-      ctx.strokeStyle = "#000000";
+      ctx.strokeStyle = "#888888";
       ctx.lineWidth = 0.5;
 
       for (let x = 0; x <= canvas.width; x += pixelSize) {
@@ -68,11 +110,11 @@ export default function Canvas({
         ctx.stroke();
       }
     }
-  }, [showGrid, pixelSize]);
-
+  }, [showGrid, pixelSize, canvasSize]);
+  
   // Save canvas as PNG
   useEffect(() => {
-    if (saveCanvas) {
+    if (triggerSave > 0) {
       const canvas = drawCanvasRef.current;
       if (!canvas) return;
 
@@ -84,14 +126,42 @@ export default function Canvas({
       link.click();
       document.body.removeChild(link);
     }
-  }, [saveCanvas]);
+  }, [triggerSave]);
 
   // Load canvas from PNG
   useEffect(() => {
-    if (loadCanvas && fileInputRef.current) {
+    if (triggerLoad > 0 && fileInputRef.current) {
       fileInputRef.current.click();
     }
-  }, [loadCanvas]);
+  }, [triggerLoad]);
+
+  // Undo functionality
+  useEffect(() => {
+    if (triggerUndo > 0 && historyIndex > 0) {
+      const canvas = drawCanvasRef.current;
+      if (!canvas) return;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+
+      const newIndex = historyIndex - 1;
+      ctx.putImageData(history[newIndex], 0, 0);
+      setHistoryIndex(newIndex);
+    }
+  }, [triggerUndo]);
+
+  // Redo functionality
+  useEffect(() => {
+    if (triggerRedo > 0 && historyIndex < history.length - 1) {
+      const canvas = drawCanvasRef.current;
+      if (!canvas) return;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+
+      const newIndex = historyIndex + 1;
+      ctx.putImageData(history[newIndex], 0, 0);
+      setHistoryIndex(newIndex);
+    }
+  }, [triggerRedo]);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -111,8 +181,92 @@ export default function Canvas({
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
 
+    // Save to history
+    saveToHistory();
+
     // Reset input so the same file can be chosen again
     e.target.value = "";
+  };
+
+  const bucketFill = (startX: number, startY: number) => {
+    const canvas = drawCanvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const data = imageData.data;
+
+    // Get pixel coordinates
+    const pixelX = Math.floor(startX / pixelSize) * pixelSize;
+    const pixelY = Math.floor(startY / pixelSize) * pixelSize;
+
+    // Get the color at the starting pixel
+    const startIndex = (pixelY * canvas.width + pixelX) * 4;
+    const targetR = data[startIndex];
+    const targetG = data[startIndex + 1];
+    const targetB = data[startIndex + 2];
+    const targetA = data[startIndex + 3];
+
+    // Convert fill color from hex to RGB
+    const fillColor = penColor;
+    const r = parseInt(fillColor.slice(1, 3), 16);
+    const g = parseInt(fillColor.slice(3, 5), 16);
+    const b = parseInt(fillColor.slice(5, 7), 16);
+
+    // Don't fill if the target color is the same as fill color
+    if (targetR === r && targetG === g && targetB === b && targetA === 255) {
+      return;
+    }
+
+    // Flood fill algorithm using a stack
+    const stack: [number, number][] = [[pixelX, pixelY]];
+    const visited = new Set<string>();
+
+    while (stack.length > 0) {
+      const [x, y] = stack.pop()!;
+      const key = `${x},${y}`;
+
+      if (visited.has(key)) continue;
+      if (x < 0 || x >= canvas.width || y < 0 || y >= canvas.height) continue;
+
+      visited.add(key);
+
+      const index = (y * canvas.width + x) * 4;
+      const currentR = data[index];
+      const currentG = data[index + 1];
+      const currentB = data[index + 2];
+      const currentA = data[index + 3];
+
+      // Check if this pixel matches the target color
+      if (
+        currentR !== targetR ||
+        currentG !== targetG ||
+        currentB !== targetB ||
+        currentA !== targetA
+      ) {
+        continue;
+      }
+
+      // Fill the entire pixel block
+      for (let dy = 0; dy < pixelSize; dy++) {
+        for (let dx = 0; dx < pixelSize; dx++) {
+          const fillIndex = ((y + dy) * canvas.width + (x + dx)) * 4;
+          data[fillIndex] = r;
+          data[fillIndex + 1] = g;
+          data[fillIndex + 2] = b;
+          data[fillIndex + 3] = 255;
+        }
+      }
+
+      // Add neighboring pixels to the stack
+      stack.push([x + pixelSize, y]);
+      stack.push([x - pixelSize, y]);
+      stack.push([x, y + pixelSize]);
+      stack.push([x, y - pixelSize]);
+    }
+
+    ctx.putImageData(imageData, 0, 0);
   };
 
   const drawPixel = (e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -122,11 +276,34 @@ export default function Canvas({
     if (!ctx) return;
 
     const rect = canvas.getBoundingClientRect();
-    const x = Math.floor((e.clientX - rect.left) / pixelSize) * pixelSize;
-    const y = Math.floor((e.clientY - rect.top) / pixelSize) * pixelSize;
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    const x =
+      Math.floor(((e.clientX - rect.left) * scaleX) / pixelSize) * pixelSize;
+    const y =
+      Math.floor(((e.clientY - rect.top) * scaleY) / pixelSize) * pixelSize;
 
-    ctx.fillStyle = penColor;
-    ctx.fillRect(x, y, pixelSize, pixelSize);
+    if (selectedTool === "pen") {
+      ctx.fillStyle = penColor;
+      ctx.fillRect(x, y, pixelSize, pixelSize);
+    } else if (selectedTool === "eraser") {
+      ctx.fillStyle = canvasColor;
+      ctx.fillRect(x, y, pixelSize, pixelSize);
+    }
+  };
+
+  const handleCanvasClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (selectedTool === "bucket") {
+      const canvas = drawCanvasRef.current;
+      if (!canvas) return;
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      const x = (e.clientX - rect.left) * scaleX;
+      const y = (e.clientY - rect.top) * scaleY;
+      bucketFill(x, y);
+      saveToHistory();
+    }
   };
 
   return (
@@ -145,15 +322,30 @@ export default function Canvas({
         <canvas
           ref={drawCanvasRef}
           className="cursor-crosshair"
+          onClick={handleCanvasClick}
           onMouseDown={(e) => {
-            setIsDrawing(true);
-            drawPixel(e);
+            if (selectedTool !== "bucket") {
+              setIsDrawing(true);
+              drawPixel(e);
+            }
           }}
           onMouseMove={(e) => {
-            if (isDrawing) drawPixel(e);
+            if (isDrawing && selectedTool !== "bucket") {
+              drawPixel(e);
+            }
           }}
-          onMouseUp={() => setIsDrawing(false)}
-          onMouseLeave={() => setIsDrawing(false)}
+          onMouseUp={() => {
+            if (isDrawing) {
+              setIsDrawing(false);
+              saveToHistory();
+            }
+          }}
+          onMouseLeave={() => {
+            if (isDrawing) {
+              setIsDrawing(false);
+              saveToHistory();
+            }
+          }}
         />
 
         {/* Grid overlay */}
