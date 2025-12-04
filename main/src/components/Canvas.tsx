@@ -164,7 +164,7 @@ export default function Canvas({
       const data = canvas.toDataURL("image/png");
       const link = document.createElement("a");
       link.href = data;
-      link.download = "canvas.png";
+      link.download = `pixel-art.png`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -227,6 +227,17 @@ export default function Canvas({
       if (!ctx) {
         alert("Failed to load canvas context.");
         return;
+      }
+
+      // Check if image dimensions match canvas dimensions
+      if (bitmap.width !== canvas.width || bitmap.height !== canvas.height) {
+        const proceed = confirm(
+          `Image dimensions (${bitmap.width}x${bitmap.height}) don't match canvas size (${canvas.width}x${canvas.height}).\n\nThe image will be stretched to fit. Continue?`
+        );
+        if (!proceed) {
+          e.target.value = "";
+          return;
+        }
       }
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
