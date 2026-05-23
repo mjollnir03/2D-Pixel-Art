@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 type Tool = "pen" | "eraser" | "bucket";
 
@@ -32,12 +32,16 @@ export default function Canvas({
   const drawCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const gridCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const canvasColorRef = useRef(canvasColor);
+  const previousCanvasColorRef = useRef(canvasColor);
+  const lastUndoTriggerRef = useRef(triggerUndo);
+  const lastRedoTriggerRef = useRef(triggerRedo);
   const [isDrawing, setIsDrawing] = useState(false);
   const [history, setHistory] = useState<ImageData[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
-  const [previousCanvasColor, setPreviousCanvasColor] = useState(canvasColor);
+
   // Save current state to history
-  const saveToHistory = () => {
+  const saveToHistory = useCallback(() => {
     const canvas = drawCanvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d", { willReadFrequently: true });
@@ -58,7 +62,11 @@ export default function Canvas({
       const newIndex = prev + 1;
       return newIndex >= 50 ? 49 : newIndex;
     });
-  };
+  }, [historyIndex]);
+
+  useEffect(() => {
+    canvasColorRef.current = canvasColor;
+  }, [canvasColor]);
 
   // Initialize draw canvas
   useEffect(() => {
@@ -72,14 +80,15 @@ export default function Canvas({
     ctx.imageSmoothingEnabled = false;
 
     // Fill background
-    ctx.fillStyle = canvasColor;
+    const currentCanvasColor = canvasColorRef.current;
+    ctx.fillStyle = currentCanvasColor;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     // Save initial state and update previous color
     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
     setHistory([imageData]);
     setHistoryIndex(0);
-    setPreviousCanvasColor(canvasColor);
+    previousCanvasColorRef.current = currentCanvasColor;
   }, [triggerReset, canvasSize]);
 
   // Grid setup
@@ -116,6 +125,7 @@ export default function Canvas({
 
   // Update canvas background color when it changes
   useEffect(() => {
+    const previousCanvasColor = previousCanvasColorRef.current;
     if (previousCanvasColor === canvasColor) return;
 
     const canvas = drawCanvasRef.current;
@@ -151,9 +161,9 @@ export default function Canvas({
     }
 
     ctx.putImageData(imageData, 0, 0);
-    setPreviousCanvasColor(canvasColor);
+    previousCanvasColorRef.current = canvasColor;
     saveToHistory();
-  }, [canvasColor]);
+  }, [canvasColor, saveToHistory]);
 
   // Save canvas as PNG
   useEffect(() => {
@@ -180,6 +190,9 @@ export default function Canvas({
 
   // Undo functionality
   useEffect(() => {
+    if (triggerUndo === lastUndoTriggerRef.current) return;
+    lastUndoTriggerRef.current = triggerUndo;
+
     if (triggerUndo > 0 && historyIndex > 0) {
       const canvas = drawCanvasRef.current;
       if (!canvas) return;
@@ -190,10 +203,13 @@ export default function Canvas({
       ctx.putImageData(history[newIndex], 0, 0);
       setHistoryIndex(newIndex);
     }
-  }, [triggerUndo]);
+  }, [triggerUndo, historyIndex, history]);
 
   // Redo functionality
   useEffect(() => {
+    if (triggerRedo === lastRedoTriggerRef.current) return;
+    lastRedoTriggerRef.current = triggerRedo;
+
     if (triggerRedo > 0 && historyIndex < history.length - 1) {
       const canvas = drawCanvasRef.current;
       if (!canvas) return;
@@ -204,7 +220,7 @@ export default function Canvas({
       ctx.putImageData(history[newIndex], 0, 0);
       setHistoryIndex(newIndex);
     }
-  }, [triggerRedo]);
+  }, [triggerRedo, historyIndex, history]);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
