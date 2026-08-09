@@ -1,158 +1,130 @@
 # 2D Pixel Art
 
-A browser-based 2D pixel-art editor built with React, TypeScript, Vite, and Tailwind CSS.
+A browser-based pixel-art editor built with React, TypeScript, Vite, and Tailwind CSS. The application runs entirely in the browser: there is no backend, account system, or remote storage.
 
-## Workspace
+Planned GitHub Pages URL: [https://mjollnir03.github.io/2D-Pixel-Art/](https://mjollnir03.github.io/2D-Pixel-Art/). Pages is currently disabled, so the URL will return 404 until the deployment setup below is enabled and pushed.
 
-This project is stored in WSL while being developed from Windows 11 and VSCode.
+The Vite application lives in [`main/`](main/). Run all npm commands from that directory.
 
-Windows File Explorer path to the WSL projects folder:
+## Current stack
 
-```text
-\\wsl.localhost\Ubuntu-24.04\home\ellmaer-ranjber\Projects
-```
+| Tool | Version | Purpose |
+| --- | ---: | --- |
+| Node.js | 24.19.0 | Local and CI runtime |
+| npm | 11.17.0 | Package manager and lockfile |
+| React / React DOM | 19.2.8 | User interface |
+| Vite | 8.2.1 | Development server and production build |
+| `@vitejs/plugin-react` | 6.0.5 | React integration for Vite |
+| TypeScript | 6.0.3 | Strictly typed application code |
+| Tailwind CSS / `@tailwindcss/vite` | 4.3.3 | Styling and Vite integration |
+| ESLint | 10.8.1 | Static analysis |
+| `@eslint/js` | 10.0.1 | Core JavaScript lint rules |
+| `typescript-eslint` | 8.66.0 | TypeScript ESLint support |
+| `react-color` | 2.19.3 | Current color-picker UI |
 
-Repository path:
+TypeScript 7 is intentionally deferred until it is supported by the project's `typescript-eslint` toolchain. `react-color` is a legacy dependency retained for compatibility; replacing it is part of the finishing roadmap.
 
-```text
-\\wsl.localhost\Ubuntu-24.04\home\ellmaer-ranjber\Projects\2D-Pixel-Art
-```
+Pixelify Sans is bundled locally in [`main/public/fonts/`](main/public/fonts/). The repository is MIT licensed.
 
-WSL path:
+## How the application works
 
-```bash
-/home/ellmaer-ranjber/Projects/2D-Pixel-Art
-```
+The data flow is deliberately small:
 
-The Vite app lives in the `main/` folder.
+1. [`main/index.html`](main/index.html) loads [`main/src/main.tsx`](main/src/main.tsx), which mounts React in `StrictMode`.
+2. [`main/src/App.tsx`](main/src/App.tsx) owns the toolbar state: tool selection, pen and canvas colors, grid visibility, canvas size, and action triggers.
+3. [`main/src/components/Canvas.tsx`](main/src/components/Canvas.tsx) owns the bitmap, drawing events, grid overlay, PNG import/export, bucket fill, and undo/redo history.
+4. The editor stacks a drawing canvas under a pointer-transparent grid canvas. Drawing coordinates are snapped to logical cells.
+5. Save and load use browser APIs. No artwork is sent to a server or automatically persisted.
 
-## Target Runtime And Versions
+Every configured canvas size contains a 40 x 40 logical grid. The 400, 600, 800, and 1000 options change the exported image dimensions and cell scale, not the number of logical cells.
 
-Use the VSCode WSL terminal and run project commands from `main/`.
+## Current features
 
-Target local runtime:
-
-- Node.js `24.15.0`
-- npm `11.13.0`
-
-Target package upgrade baseline:
-
-- React latest stable: `19.2.6`
-- Vite latest stable: `8.0.14`
-
-These React and Vite versions were checked against npm on May 23, 2026. npm may advertise a newer CLI than the project baseline; this project intentionally documents npm `11.13.0` as the planned local version.
-
-## Current Checked-In Package State
-
-The project has not yet been upgraded to the target package baseline. Current checked-in ranges include:
-
-- React `^19.1.1`
-- React DOM `^19.1.1`
-- Vite `^7.1.7`
-- TypeScript `~5.8.3`
-- Tailwind CSS `^4.1.13`
-- `@tailwindcss/vite` `^4.1.13`
-
-The committed lockfile currently resolves Vite to `7.1.12` and React to `19.1.1`.
-
-## Tech Stack
-
-- React for the UI
-- TypeScript for typed app code
-- Vite for development server and production build
-- Tailwind CSS v4 for utility styling
-- `react-color` for the color picker UI
-- ESLint flat config for linting
-- npm with `package-lock.json` for dependency locking
-- Pixelify Sans font files stored in `main/public/fonts/`
-
-## Project Structure
-
-```text
-2D-Pixel-Art/
-  README.md
-  LICENSE
-  main/
-    package.json
-    package-lock.json
-    vite.config.ts
-    eslint.config.js
-    tsconfig.json
-    tsconfig.app.json
-    tsconfig.node.json
-    index.html
-    public/
-      vite.svg
-      fonts/
-    src/
-      main.tsx
-      App.tsx
-      components/
-        Button.tsx
-        Canvas.tsx
-        ColorPicker.tsx
-        Header.tsx
-      styles/
-        App.css
-        index.css
-```
-
-## App Features
-
-- Pen, eraser, and bucket-fill tools
-- Pen color and canvas color pickers
+- Pen, eraser, and contiguous bucket-fill tools
+- Pen and canvas color pickers
 - Toggleable grid overlay
-- Canvas sizes of `400`, `600`, `800`, and `1000`
-- PNG save/download
-- PNG load/import
-- Undo and redo history
-- Canvas reset
+- 400, 600, 800, and 1000-pixel canvas output
+- PNG download and PNG import, including a dimension-mismatch warning
+- Undo and redo with up to 50 bitmap snapshots
+- Confirmed canvas reset and canvas-size changes
+- Initial canvas sizing based on viewport width
 
-## Setup
+## Development setup
 
-From a WSL terminal:
+Clone the repository first:
 
 ```bash
-cd /home/ellmaer-ranjber/Projects/2D-Pixel-Art/main
+git clone https://github.com/mjollnir03/2D-Pixel-Art.git
+cd 2D-Pixel-Art
+```
+
+### nvm (recommended for an exact Node version)
+
+On macOS or Linux, install [nvm](https://github.com/nvm-sh/nvm), then run:
+
+```bash
+nvm install 24.19.0
+nvm use 24.19.0
+npm install --global npm@11.17.0
+```
+
+On Windows, use [nvm-windows](https://github.com/coreybutler/nvm-windows) and run the same `nvm install` and `nvm use` commands in PowerShell. A direct Node.js installation also works, provided `node --version` and `npm --version` match the versions above.
+
+### Homebrew
+
+On macOS, Homebrew can install the Node 24 release line:
+
+```bash
+brew install node@24
+brew link --overwrite --force node@24
+npm install --global npm@11.17.0
+```
+
+Use nvm when an exact Node patch version is required.
+
+### Install and run
+
+```bash
+cd main
 node --version
 npm --version
-npm install
-```
-
-Expected local versions:
-
-```text
-node v24.15.0
-npm 11.13.0
-```
-
-## Planned Package Upgrade
-
-When ready to update all npm packages, run the upgrade from `main/`:
-
-```bash
-npm install react@latest react-dom@latest vite@latest
-npm install @vitejs/plugin-react@latest @tailwindcss/vite@latest tailwindcss@latest react-color@latest
-npm install -D typescript@latest eslint@latest @eslint/js@latest typescript-eslint@latest
-npm install -D eslint-plugin-react-hooks@latest eslint-plugin-react-refresh@latest globals@latest
-npm install -D @types/react@latest @types/react-dom@latest @types/react-color@latest
-```
-
-After upgrading:
-
-```bash
-npm run lint
-npm run build
+npm ci
 npm run dev
 ```
 
-## Scripts
+Vite prints the local development URL. Stop the server with `Ctrl+C`.
+
+## Available scripts
 
 Run these from `main/`:
 
-```bash
-npm run dev
-npm run build
-npm run lint
-npm run preview
-```
+| Command | Purpose |
+| --- | --- |
+| `npm run dev` | Start the Vite development server |
+| `npm run build` | Type-check and create the production build in `main/dist/` |
+| `npm run lint` | Run ESLint across the project |
+| `npm run preview` | Serve the production build locally |
+
+There is no automated test suite yet, so `npm run lint` and `npm run build` are the current required validation checks.
+
+## GitHub Pages deployment
+
+The repository's Pages workflow installs the locked dependencies from `main/`, runs lint and build checks, and publishes `main/dist/` when `main` is updated. The Vite base path is configured for the `/2D-Pixel-Art/` project URL.
+
+One repository setting must be enabled before the workflow can publish:
+
+1. Open the GitHub repository.
+2. Go to **Settings -> Pages**.
+3. Under **Build and deployment**, set **Source** to **GitHub Actions**.
+4. Push to `main` or manually run the Pages workflow from the **Actions** tab.
+
+After the first successful workflow deployment, the application will be available at [https://mjollnir03.github.io/2D-Pixel-Art/](https://mjollnir03.github.io/2D-Pixel-Art/). It currently returns 404 because Pages is disabled for the repository.
+
+## Finishing roadmap
+
+1. **Correct canvas history and background behavior.** Store canvas settings with history, so undoing a background change cannot desynchronize the bitmap and eraser color. Track background cells explicitly instead of recoloring every painted pixel that happens to match the old background.
+2. **Reduce history memory and color-change work.** Fifty full 1000 x 1000 `ImageData` snapshots use roughly 200 MB before overhead. Use bounded diffs, compressed snapshots, or fewer checkpoints, and avoid recording every intermediate color-picker update.
+3. **Complete pointer and responsive support.** Replace mouse-only handlers with pointer events, add touch behavior, interpolate fast strokes to prevent skipped cells, and scale the canvas to narrow viewports without changing its backing resolution.
+4. **Add automated coverage and CI validation.** Test bucket fill, history branching, coordinate conversion, PNG import, and background changes; then add browser-level drawing and deployment smoke tests.
+5. **Modernize the remaining UI.** Replace legacy `react-color`, add accessible canvas/tool labels and keyboard operation, and disable undo/redo when unavailable.
+6. **Confirm the final product scope.** Decide whether to restore features preserved on the `old-version` branch: eyedropper, rainbow drawing, fill-all, and variable logical grid resolution. Consider local autosave after the core behavior is stable.
