@@ -1,6 +1,47 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import type { ChangeEvent, PointerEvent } from "react";
+import {
+  GRID_SIZE,
+  clientPointToGrid,
+  commitHistory,
+  createHistory,
+  createPixelDocument,
+  floodFill,
+  parsePngDimensions,
+  paintCell,
+  paintLine,
+  redoHistory,
+  rgbToHex,
+  undoHistory,
+  validatePngFile,
+} from "../lib/pixelDocument";
+import type {
+  DocumentHistory,
+  GridPoint,
+  PixelColor,
+  PixelDocument,
+} from "../lib/pixelDocument";
 
 type Tool = "pen" | "eraser" | "bucket";
+
+export type CanvasStatusTone = "info" | "error";
+
+export type CanvasHandle = {
+  undo: () => void;
+  redo: () => void;
+  save: () => void;
+  openFilePicker: () => void;
+  reset: () => void;
+};
 
 type CanvasProps = {
   showGrid?: boolean;
@@ -8,433 +49,526 @@ type CanvasProps = {
   canvasColor?: string;
   selectedTool?: Tool;
   canvasSize?: number;
-  pixelSize?: number;
-  triggerSave?: number;
-  triggerLoad?: number;
-  triggerReset?: number;
-  triggerUndo?: number;
-  triggerRedo?: number;
+  onHistoryChange?: (state: { canUndo: boolean; canRedo: boolean }) => void;
+  onCanvasColorRestore?: (color: string) => void;
+  onStatus?: (message: string, tone?: CanvasStatusTone) => void;
 };
 
-export default function Canvas({
-  showGrid,
-  penColor = "#000000",
-  canvasColor = "#ffffff",
-  selectedTool = "pen",
-  canvasSize = 800,
-  pixelSize = 20,
-  triggerSave = 0,
-  triggerLoad = 0,
-  triggerReset = 0,
-  triggerUndo = 0,
-  triggerRedo = 0,
-}: CanvasProps) {
+const MAX_IMAGE_BYTES = 20 * 1024 * 1024;
+const MAX_IMAGE_DIMENSION = 8192;
+const MAX_IMAGE_PIXELS = 32_000_000;
+const SUPPORTED_IMPORT_SIZES = new Set([40, 400, 600, 800, 1000]);
+
+function renderDocument(
+  canvas: HTMLCanvasElement,
+  pixelDocument: PixelDocument,
+  dimension: number,
+): boolean {
+  if (canvas.width !== dimension) canvas.width = dimension;
+  if (canvas.height !== dimension) canvas.height = dimension;
+
+  const context = canvas.getContext("2d");
+  if (!context) return false;
+
+  const cellSize = dimension / GRID_SIZE;
+  context.imageSmoothingEnabled = false;
+  context.fillStyle = pixelDocument.background;
+  context.fillRect(0, 0, dimension, dimension);
+
+  pixelDocument.cells.forEach((color, index) => {
+    if (!color) return;
+    const x = index % GRID_SIZE;
+    const y = Math.floor(index / GRID_SIZE);
+    context.fillStyle = color;
+    context.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
+  });
+
+  return true;
+}
+
+const Canvas = forwardRef<CanvasHandle, CanvasProps>(function Canvas(
+  {
+    showGrid = false,
+    penColor = "#000000",
+    canvasColor = "#ffffff",
+    selectedTool = "pen",
+    canvasSize = 800,
+    onHistoryChange,
+    onCanvasColorRestore,
+    onStatus,
+  },
+  ref,
+) {
   const drawCanvasRef = useRef<HTMLCanvasElement | null>(null);
-  const gridCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const overlayCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const canvasColorRef = useRef(canvasColor);
-  const previousCanvasColorRef = useRef(canvasColor);
-  const lastUndoTriggerRef = useRef(triggerUndo);
-  const lastRedoTriggerRef = useRef(triggerRedo);
-  const [isDrawing, setIsDrawing] = useState(false);
-  const [history, setHistory] = useState<ImageData[]>([]);
-  const [historyIndex, setHistoryIndex] = useState(-1);
+  const backgroundTimerRef = useRef<number | null>(null);
+  const isDrawingRef = useRef(false);
+  const lastPointRef = useRef<GridPoint | null>(null);
+  const draftRef = useRef<PixelDocument | null>(null);
+  const contextErrorReportedRef = useRef(false);
+  const documentVersionRef = useRef(0);
+  const importOperationRef = useRef(0);
+  const lastCanvasColorRef = useRef(canvasColor);
 
-  // Save current state to history
-  const saveToHistory = useCallback(() => {
-    const canvas = drawCanvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d", { willReadFrequently: true });
-    if (!ctx) return;
+  const [history, setHistory] = useState<DocumentHistory>(() =>
+    createHistory(createPixelDocument(canvasColor)),
+  );
+  const historyRef = useRef(history);
+  const [draftDocument, setDraftDocument] = useState<PixelDocument | null>(null);
 
-    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    setHistory((prev) => {
-      const newHistory = prev.slice(0, historyIndex + 1);
-      newHistory.push(imageData);
-      // Limit history to 50 states
-      if (newHistory.length > 50) {
-        newHistory.shift();
-        return newHistory;
-      }
-      return newHistory;
-    });
-    setHistoryIndex((prev) => {
-      const newIndex = prev + 1;
-      return newIndex >= 50 ? 49 : newIndex;
-    });
-  }, [historyIndex]);
+  const applyHistory = useCallback((next: DocumentHistory) => {
+    if (next === historyRef.current) return;
+    documentVersionRef.current += 1;
+    historyRef.current = next;
+    setHistory(next);
+  }, []);
+
+  const commitDocument = useCallback(
+    (pixelDocument: PixelDocument) => {
+      const next = commitHistory(historyRef.current, pixelDocument);
+      applyHistory(next);
+      return next.present;
+    },
+    [applyHistory],
+  );
+
+  const clearBackgroundTimer = useCallback(() => {
+    if (backgroundTimerRef.current !== null) {
+      window.clearTimeout(backgroundTimerRef.current);
+      backgroundTimerRef.current = null;
+    }
+  }, []);
+
+  const ensureCurrentBackground = useCallback(() => {
+    clearBackgroundTimer();
+    const current = historyRef.current.present;
+    if (current.background === canvasColor) return current;
+    return commitDocument({ ...current, background: canvasColor });
+  }, [canvasColor, clearBackgroundTimer, commitDocument]);
 
   useEffect(() => {
-    canvasColorRef.current = canvasColor;
+    historyRef.current = history;
+    onHistoryChange?.({
+      canUndo: history.past.length > 0,
+      canRedo: history.future.length > 0,
+    });
+  }, [history, onHistoryChange]);
+
+  useLayoutEffect(() => {
+    if (lastCanvasColorRef.current === canvasColor) return;
+    lastCanvasColorRef.current = canvasColor;
+    documentVersionRef.current += 1;
   }, [canvasColor]);
 
-  // Initialize draw canvas
+  useEffect(() => {
+    clearBackgroundTimer();
+    if (canvasColor === historyRef.current.present.background) return;
+
+    backgroundTimerRef.current = window.setTimeout(() => {
+      const current = historyRef.current.present;
+      if (current.background !== canvasColor) {
+        commitDocument({ ...current, background: canvasColor });
+        onStatus?.("Background changed.");
+      }
+      backgroundTimerRef.current = null;
+    }, 180);
+
+    return clearBackgroundTimer;
+  }, [canvasColor, clearBackgroundTimer, commitDocument, onStatus]);
+
+  const displayedDocument = useMemo(() => {
+    if (draftDocument) return draftDocument;
+    if (history.present.background === canvasColor) return history.present;
+    return { ...history.present, background: canvasColor };
+  }, [canvasColor, draftDocument, history.present]);
+
   useEffect(() => {
     const canvas = drawCanvasRef.current;
     if (!canvas) return;
-    const ctx = canvas.getContext("2d", { willReadFrequently: true });
-    if (!ctx) return;
+    const rendered = renderDocument(canvas, displayedDocument, canvasSize);
+    if (!rendered && !contextErrorReportedRef.current) {
+      contextErrorReportedRef.current = true;
+      onStatus?.(
+        "The browser could not create the drawing canvas. Reload the page and try again.",
+        "error",
+      );
+    }
+  }, [canvasSize, displayedDocument, onStatus]);
 
-    canvas.width = canvasSize;
-    canvas.height = canvasSize;
-    ctx.imageSmoothingEnabled = false;
-
-    // Fill background
-    const currentCanvasColor = canvasColorRef.current;
-    ctx.fillStyle = currentCanvasColor;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    // Save initial state and update previous color
-    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    setHistory([imageData]);
-    setHistoryIndex(0);
-    previousCanvasColorRef.current = currentCanvasColor;
-  }, [triggerReset, canvasSize]);
-
-  // Grid setup
   useEffect(() => {
-    const canvas = gridCanvasRef.current;
+    const canvas = overlayCanvasRef.current;
     if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+    if (canvas.width !== canvasSize) canvas.width = canvasSize;
+    if (canvas.height !== canvasSize) canvas.height = canvasSize;
+    const context = canvas.getContext("2d");
+    if (!context) return;
 
-    canvas.width = canvasSize;
-    canvas.height = canvasSize;
-    ctx.imageSmoothingEnabled = false;
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    context.clearRect(0, 0, canvasSize, canvasSize);
+    const cellSize = canvasSize / GRID_SIZE;
 
     if (showGrid) {
-      ctx.strokeStyle = "#888888";
-      ctx.lineWidth = 0.5;
-
-      for (let x = 0; x <= canvas.width; x += pixelSize) {
-        ctx.beginPath();
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x, canvas.height);
-        ctx.stroke();
+      context.beginPath();
+      context.strokeStyle = "rgba(23, 23, 23, 0.32)";
+      context.lineWidth = Math.max(1, canvasSize / 1000);
+      for (let step = 1; step < GRID_SIZE; step += 1) {
+        const position = step * cellSize;
+        context.moveTo(position, 0);
+        context.lineTo(position, canvasSize);
+        context.moveTo(0, position);
+        context.lineTo(canvasSize, position);
       }
-
-      for (let y = 0; y <= canvas.height; y += pixelSize) {
-        ctx.beginPath();
-        ctx.moveTo(0, y);
-        ctx.lineTo(canvas.width, y);
-        ctx.stroke();
-      }
-    }
-  }, [showGrid, pixelSize, canvasSize]);
-
-  // Update canvas background color when it changes
-  useEffect(() => {
-    const previousCanvasColor = previousCanvasColorRef.current;
-    if (previousCanvasColor === canvasColor) return;
-
-    const canvas = drawCanvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d", { willReadFrequently: true });
-    if (!ctx) return;
-
-    // Get current canvas data
-    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    const data = imageData.data;
-
-    // Convert previous and new colors from hex to RGB
-    const oldR = parseInt(previousCanvasColor.slice(1, 3), 16);
-    const oldG = parseInt(previousCanvasColor.slice(3, 5), 16);
-    const oldB = parseInt(previousCanvasColor.slice(5, 7), 16);
-
-    const newR = parseInt(canvasColor.slice(1, 3), 16);
-    const newG = parseInt(canvasColor.slice(3, 5), 16);
-    const newB = parseInt(canvasColor.slice(5, 7), 16);
-
-    // Replace all pixels that match the old canvas color with the new color
-    for (let i = 0; i < data.length; i += 4) {
-      if (
-        data[i] === oldR &&
-        data[i + 1] === oldG &&
-        data[i + 2] === oldB &&
-        data[i + 3] === 255
-      ) {
-        data[i] = newR;
-        data[i + 1] = newG;
-        data[i + 2] = newB;
-      }
+      context.stroke();
     }
 
-    ctx.putImageData(imageData, 0, 0);
-    previousCanvasColorRef.current = canvasColor;
-    saveToHistory();
-  }, [canvasColor, saveToHistory]);
+  }, [canvasSize, showGrid]);
 
-  // Save canvas as PNG
-  useEffect(() => {
-    if (triggerSave > 0) {
-      const canvas = drawCanvasRef.current;
-      if (!canvas) return;
+  const pointFromPointer = useCallback(
+    (event: PointerEvent<HTMLCanvasElement>) => {
+      const rect = event.currentTarget.getBoundingClientRect();
+      return clientPointToGrid(event.clientX, event.clientY, rect);
+    },
+    [],
+  );
 
-      const data = canvas.toDataURL("image/png");
-      const link = document.createElement("a");
-      link.href = data;
-      link.download = `pixel-art.png`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+  const paintValue: PixelColor = selectedTool === "eraser" ? null : penColor;
+
+  const finishStroke = useCallback(() => {
+    if (!isDrawingRef.current) return;
+    isDrawingRef.current = false;
+    lastPointRef.current = null;
+    const draft = draftRef.current;
+    draftRef.current = null;
+    setDraftDocument(null);
+    if (draft && commitDocument(draft) === draft) {
+      onStatus?.(selectedTool === "eraser" ? "Stroke erased." : "Stroke added.");
     }
-  }, [triggerSave]);
+  }, [commitDocument, onStatus, selectedTool]);
 
-  // Load canvas from PNG
-  useEffect(() => {
-    if (triggerLoad > 0 && fileInputRef.current) {
-      fileInputRef.current.click();
-    }
-  }, [triggerLoad]);
-
-  // Undo functionality
-  useEffect(() => {
-    if (triggerUndo === lastUndoTriggerRef.current) return;
-    lastUndoTriggerRef.current = triggerUndo;
-
-    if (triggerUndo > 0 && historyIndex > 0) {
-      const canvas = drawCanvasRef.current;
-      if (!canvas) return;
-      const ctx = canvas.getContext("2d", { willReadFrequently: true });
-      if (!ctx) return;
-
-      const newIndex = historyIndex - 1;
-      ctx.putImageData(history[newIndex], 0, 0);
-      setHistoryIndex(newIndex);
-    }
-  }, [triggerUndo, historyIndex, history]);
-
-  // Redo functionality
-  useEffect(() => {
-    if (triggerRedo === lastRedoTriggerRef.current) return;
-    lastRedoTriggerRef.current = triggerRedo;
-
-    if (triggerRedo > 0 && historyIndex < history.length - 1) {
-      const canvas = drawCanvasRef.current;
-      if (!canvas) return;
-      const ctx = canvas.getContext("2d", { willReadFrequently: true });
-      if (!ctx) return;
-
-      const newIndex = historyIndex + 1;
-      ctx.putImageData(history[newIndex], 0, 0);
-      setHistoryIndex(newIndex);
-    }
-  }, [triggerRedo, historyIndex, history]);
-
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (file.type !== "image/png") {
-      alert("Invalid file type. Please select a PNG image.");
-      e.target.value = "";
+  const handlePointerDown = (event: PointerEvent<HTMLCanvasElement>) => {
+    if (!event.isPrimary || (event.pointerType === "mouse" && event.button !== 0)) {
       return;
     }
+
+    const point = pointFromPointer(event);
+    if (!point) return;
+    event.preventDefault();
+    event.currentTarget.setPointerCapture(event.pointerId);
+
+    const current = ensureCurrentBackground();
+    if (selectedTool === "bucket") {
+      const cells = floodFill(current.cells, point, penColor);
+      commitDocument({ ...current, cells });
+      onStatus?.("Filled a connected area.");
+      return;
+    }
+
+    documentVersionRef.current += 1;
+    const cells = paintCell(current.cells, point, paintValue);
+    const draft = { ...current, cells };
+    isDrawingRef.current = true;
+    lastPointRef.current = point;
+    draftRef.current = draft;
+    setDraftDocument(draft);
+  };
+
+  const handlePointerMove = (event: PointerEvent<HTMLCanvasElement>) => {
+    if (!isDrawingRef.current || !event.isPrimary) return;
+    const point = pointFromPointer(event);
+    const previous = lastPointRef.current;
+    const draft = draftRef.current;
+    if (!point || !previous || !draft) return;
+    event.preventDefault();
+    const cells = paintLine(draft.cells, previous, point, paintValue);
+    if (cells !== draft.cells) {
+      const nextDraft = { ...draft, cells };
+      draftRef.current = nextDraft;
+      setDraftDocument(nextDraft);
+    }
+    lastPointRef.current = point;
+  };
+
+  const handlePointerEnd = (event: PointerEvent<HTMLCanvasElement>) => {
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+    finishStroke();
+  };
+
+  const undo = useCallback(() => {
+    finishStroke();
+    clearBackgroundTimer();
+    const current = historyRef.current.present;
+    if (current.background !== canvasColor) {
+      const committed = commitHistory(historyRef.current, {
+        ...current,
+        background: canvasColor,
+      });
+      const next = undoHistory(committed);
+      applyHistory(next);
+      onCanvasColorRestore?.(next.present.background);
+      onStatus?.("Undid the background change.");
+      return;
+    }
+
+    const next = undoHistory(historyRef.current);
+    if (next === historyRef.current) return;
+    applyHistory(next);
+    onCanvasColorRestore?.(next.present.background);
+    onStatus?.("Undid the last change.");
+  }, [
+    applyHistory,
+    canvasColor,
+    clearBackgroundTimer,
+    finishStroke,
+    onCanvasColorRestore,
+    onStatus,
+  ]);
+
+  const redo = useCallback(() => {
+    finishStroke();
+    clearBackgroundTimer();
+    const current = historyRef.current.present;
+    if (current.background !== canvasColor) {
+      applyHistory(
+        commitHistory(historyRef.current, {
+          ...current,
+          background: canvasColor,
+        }),
+      );
+      onStatus?.("Background changed. Redo history was cleared.");
+      return;
+    }
+
+    const next = redoHistory(historyRef.current);
+    if (next === historyRef.current) return;
+    applyHistory(next);
+    onCanvasColorRestore?.(next.present.background);
+    onStatus?.("Redid the last change.");
+  }, [
+    applyHistory,
+    canvasColor,
+    clearBackgroundTimer,
+    finishStroke,
+    onCanvasColorRestore,
+    onStatus,
+  ]);
+
+  const reset = useCallback(() => {
+    finishStroke();
+    const next = createPixelDocument(canvasColor);
+    commitDocument(next);
+    onStatus?.("Canvas reset. Use Undo to restore it.");
+  }, [canvasColor, commitDocument, finishStroke, onStatus]);
+
+  const save = useCallback(() => {
+    finishStroke();
+    const current = ensureCurrentBackground();
+    const exportCanvas = window.document.createElement("canvas");
 
     try {
-      const bitmap = await createImageBitmap(file);
-      const canvas = drawCanvasRef.current;
-      if (!canvas) {
-        alert("Canvas not ready. Please try again.");
-        return;
-      }
-      const ctx = canvas.getContext("2d");
-      if (!ctx) {
-        alert("Failed to load canvas context.");
+      if (!renderDocument(exportCanvas, current, canvasSize)) {
+        onStatus?.("Could not prepare the PNG. Reload the page and try again.", "error");
         return;
       }
 
-      // Check if image dimensions match canvas dimensions
-      if (bitmap.width !== canvas.width || bitmap.height !== canvas.height) {
-        const proceed = confirm(
-          `Image dimensions (${bitmap.width}x${bitmap.height}) don't match canvas size (${canvas.width}x${canvas.height}).\n\nThe image will be stretched to fit. Continue?`
-        );
-        if (!proceed) {
-          e.target.value = "";
-          return;
+      exportCanvas.toBlob((blob) => {
+        try {
+          if (!blob) {
+            onStatus?.("The browser could not create the PNG file.", "error");
+            return;
+          }
+
+          const url = URL.createObjectURL(blob);
+          const link = window.document.createElement("a");
+          link.href = url;
+          link.download = `pixel-art-${canvasSize}x${canvasSize}.png`;
+          window.document.body.appendChild(link);
+          link.click();
+          link.remove();
+          window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+          onStatus?.(`Downloaded pixel-art-${canvasSize}x${canvasSize}.png.`);
+        } catch {
+          onStatus?.("The browser could not download the PNG file.", "error");
         }
-      }
-
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-      saveToHistory();
-      e.target.value = "";
-    } catch (error) {
-      console.error("Failed to load image:", error);
-      alert(
-        "Failed to load the image. The file may be corrupted or incompatible."
-      );
-      e.target.value = "";
+      }, "image/png");
+    } catch {
+      onStatus?.("The browser could not export this artwork as a PNG.", "error");
     }
-  };
+  }, [canvasSize, ensureCurrentBackground, finishStroke, onStatus]);
 
-  const bucketFill = (startX: number, startY: number) => {
-    const canvas = drawCanvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d", { willReadFrequently: true });
-    if (!ctx) return;
+  const openFilePicker = useCallback(() => {
+    finishStroke();
+    fileInputRef.current?.click();
+  }, [finishStroke]);
 
-    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    const data = imageData.data;
+  useImperativeHandle(
+    ref,
+    () => ({ undo, redo, save, openFilePicker, reset }),
+    [openFilePicker, redo, reset, save, undo],
+  );
 
-    // Get pixel coordinates
-    const pixelX = Math.floor(startX / pixelSize) * pixelSize;
-    const pixelY = Math.floor(startY / pixelSize) * pixelSize;
+  const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
+    const input = event.currentTarget;
+    const file = input.files?.[0];
+    if (!file) return;
 
-    // Get the color at the starting pixel
-    const startIndex = (pixelY * canvas.width + pixelX) * 4;
-    const targetR = data[startIndex];
-    const targetG = data[startIndex + 1];
-    const targetB = data[startIndex + 2];
-    const targetA = data[startIndex + 3];
+    const operation = importOperationRef.current + 1;
+    importOperationRef.current = operation;
 
-    // Convert fill color from hex to RGB
-    const fillColor = penColor;
-    const r = parseInt(fillColor.slice(1, 3), 16);
-    const g = parseInt(fillColor.slice(3, 5), 16);
-    const b = parseInt(fillColor.slice(5, 7), 16);
-
-    // Don't fill if the target color is the same as fill color
-    if (targetR === r && targetG === g && targetB === b && targetA === 255) {
+    const validationError = validatePngFile(file, MAX_IMAGE_BYTES);
+    if (validationError) {
+      onStatus?.(validationError, "error");
+      input.value = "";
       return;
     }
 
-    // Flood fill algorithm using a stack
-    const stack: [number, number][] = [[pixelX, pixelY]];
-    const visited = new Set<string>();
+    ensureCurrentBackground();
+    const startingVersion = documentVersionRef.current;
+    const importBackground = canvasColor;
+    const isCurrentImport = () =>
+      importOperationRef.current === operation &&
+      documentVersionRef.current === startingVersion &&
+      lastCanvasColorRef.current === importBackground;
 
-    while (stack.length > 0) {
-      const [x, y] = stack.pop()!;
-      const key = `${x},${y}`;
+    let bitmap: ImageBitmap | null = null;
+    try {
+      const header = new Uint8Array(await file.slice(0, 24).arrayBuffer());
+      if (!isCurrentImport()) return;
 
-      if (visited.has(key)) continue;
-      if (x < 0 || x >= canvas.width || y < 0 || y >= canvas.height) continue;
+      const dimensions = parsePngDimensions(header);
+      if (!dimensions) {
+        onStatus?.("That file does not have a valid PNG header.", "error");
+        return;
+      }
 
-      visited.add(key);
-
-      const index = (y * canvas.width + x) * 4;
-      const currentR = data[index];
-      const currentG = data[index + 1];
-      const currentB = data[index + 2];
-      const currentA = data[index + 3];
-
-      // Check if this pixel matches the target color
       if (
-        currentR !== targetR ||
-        currentG !== targetG ||
-        currentB !== targetB ||
-        currentA !== targetA
+        dimensions.width > MAX_IMAGE_DIMENSION ||
+        dimensions.height > MAX_IMAGE_DIMENSION ||
+        dimensions.width * dimensions.height > MAX_IMAGE_PIXELS
       ) {
-        continue;
+        onStatus?.(
+          "Choose an image no larger than 8192 pixels per side or 32 megapixels total.",
+          "error",
+        );
+        return;
       }
 
-      // Fill the entire pixel block
-      for (let dy = 0; dy < pixelSize; dy++) {
-        for (let dx = 0; dx < pixelSize; dx++) {
-          const fillIndex = ((y + dy) * canvas.width + (x + dx)) * 4;
-          data[fillIndex] = r;
-          data[fillIndex + 1] = g;
-          data[fillIndex + 2] = b;
-          data[fillIndex + 3] = 255;
+      const current = historyRef.current.present;
+      const hasEditorChanges =
+        historyRef.current.past.length > 0 ||
+        historyRef.current.future.length > 0 ||
+        current.cells.some((color) => color !== null);
+      if (
+        hasEditorChanges &&
+        !window.confirm(
+          "Loading this PNG will replace the current artwork. You can still use Undo afterward. Continue?",
+        )
+      ) {
+        onStatus?.("PNG import cancelled.");
+        return;
+      }
+
+      bitmap = await createImageBitmap(file);
+      if (!isCurrentImport()) return;
+      if (
+        bitmap.width !== dimensions.width ||
+        bitmap.height !== dimensions.height
+      ) {
+        onStatus?.(
+          "That PNG decoded to dimensions that do not match its header.",
+          "error",
+        );
+        return;
+      }
+
+      const isExpectedPixelExport =
+        dimensions.width === dimensions.height &&
+        SUPPORTED_IMPORT_SIZES.has(dimensions.width);
+      if (
+        !isExpectedPixelExport &&
+        !window.confirm(
+          `This ${dimensions.width} × ${dimensions.height} image will be sampled to the editor's fixed 40 × 40 grid. Continue?`,
+        )
+      ) {
+        onStatus?.("PNG import cancelled.");
+        return;
+      }
+
+      const samplingCanvas = window.document.createElement("canvas");
+      samplingCanvas.width = GRID_SIZE;
+      samplingCanvas.height = GRID_SIZE;
+      const context = samplingCanvas.getContext("2d", { willReadFrequently: true });
+      if (!context) {
+        onStatus?.("The browser could not read that PNG. Reload and try again.", "error");
+        return;
+      }
+
+      context.imageSmoothingEnabled = false;
+      context.clearRect(0, 0, GRID_SIZE, GRID_SIZE);
+      context.drawImage(bitmap, 0, 0, GRID_SIZE, GRID_SIZE);
+      const data = context.getImageData(0, 0, GRID_SIZE, GRID_SIZE).data;
+      const background = canvasColor.toLowerCase();
+      const cells = Array.from<PixelColor>({ length: GRID_SIZE * GRID_SIZE });
+
+      for (let index = 0; index < cells.length; index += 1) {
+        const offset = index * 4;
+        if (data[offset + 3] < 128) {
+          cells[index] = null;
+          continue;
         }
+        const color = rgbToHex(data[offset], data[offset + 1], data[offset + 2]);
+        cells[index] = color === background ? null : color;
       }
 
-      // Add neighboring pixels to the stack
-      stack.push([x + pixelSize, y]);
-      stack.push([x - pixelSize, y]);
-      stack.push([x, y + pixelSize]);
-      stack.push([x, y - pixelSize]);
-    }
-
-    ctx.putImageData(imageData, 0, 0);
-  };
-
-  const drawPixel = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    const canvas = drawCanvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    const rect = canvas.getBoundingClientRect();
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
-    const x =
-      Math.floor(((e.clientX - rect.left) * scaleX) / pixelSize) * pixelSize;
-    const y =
-      Math.floor(((e.clientY - rect.top) * scaleY) / pixelSize) * pixelSize;
-
-    if (selectedTool === "pen") {
-      ctx.fillStyle = penColor;
-      ctx.fillRect(x, y, pixelSize, pixelSize);
-    } else if (selectedTool === "eraser") {
-      ctx.fillStyle = canvasColor;
-      ctx.fillRect(x, y, pixelSize, pixelSize);
-    }
-  };
-
-  const handleCanvasClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (selectedTool === "bucket") {
-      const canvas = drawCanvasRef.current;
-      if (!canvas) return;
-      const rect = canvas.getBoundingClientRect();
-      const scaleX = canvas.width / rect.width;
-      const scaleY = canvas.height / rect.height;
-      const x = (e.clientX - rect.left) * scaleX;
-      const y = (e.clientY - rect.top) * scaleY;
-      bucketFill(x, y);
-      saveToHistory();
+      if (!isCurrentImport()) return;
+      clearBackgroundTimer();
+      commitDocument({ background: importBackground, cells });
+      onStatus?.(`Imported ${file.name} into the 40 × 40 grid.`);
+    } catch {
+      if (isCurrentImport()) {
+        onStatus?.("That PNG could not be decoded. Choose another file.", "error");
+      }
+    } finally {
+      bitmap?.close();
+      input.value = "";
     }
   };
 
   return (
-    <div className="flex justify-center items-center w-full">
-      <div className="relative inline-block">
-        {/* Hidden file input for loading PNG */}
-        <input
-          type="file"
-          accept="image/png"
-          ref={fileInputRef}
-          style={{ display: "none" }}
-          onChange={handleFileChange}
-        />
-
-        {/* Drawing canvas */}
+    <div className="mx-auto flex w-full max-w-[800px] justify-center">
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/png,.png"
+        hidden
+        onChange={handleFileChange}
+      />
+      <div className="relative aspect-square w-full overflow-hidden bg-white">
         <canvas
           ref={drawCanvasRef}
-          className="cursor-crosshair"
-          onClick={handleCanvasClick}
-          onMouseDown={(e) => {
-            if (selectedTool !== "bucket") {
-              setIsDrawing(true);
-              drawPixel(e);
-            }
-          }}
-          onMouseMove={(e) => {
-            if (isDrawing && selectedTool !== "bucket") {
-              drawPixel(e);
-            }
-          }}
-          onMouseUp={() => {
-            if (isDrawing) {
-              setIsDrawing(false);
-              saveToHistory();
-            }
-          }}
-          onMouseLeave={() => {
-            if (isDrawing) {
-              setIsDrawing(false);
-              saveToHistory();
-            }
-          }}
-        />
-
-        {/* Grid overlay */}
+          width={canvasSize}
+          height={canvasSize}
+          aria-label="Pixel drawing canvas, 40 by 40 cells"
+          className="block h-full w-full cursor-crosshair touch-none [image-rendering:pixelated]"
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerEnd}
+          onPointerCancel={handlePointerEnd}
+          onLostPointerCapture={finishStroke}
+        >
+          A 40 by 40 interactive pixel-art drawing canvas.
+        </canvas>
         <canvas
-          ref={gridCanvasRef}
-          className="absolute top-0 left-0 cursor-crosshair pointer-events-none"
+          ref={overlayCanvasRef}
+          width={canvasSize}
+          height={canvasSize}
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 h-full w-full [image-rendering:pixelated]"
         />
       </div>
     </div>
   );
-}
+});
+
+export default Canvas;

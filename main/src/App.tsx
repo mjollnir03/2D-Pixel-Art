@@ -1,80 +1,74 @@
-import "./styles/App.css";
-import Header from "./components/Header";
-import Canvas from "./components/Canvas";
+import { useCallback, useRef, useState } from "react";
 import Button from "./components/Button";
+import Canvas, {
+  type CanvasHandle,
+  type CanvasStatusTone,
+} from "./components/Canvas";
 import ColorPicker from "./components/ColorPicker";
-import { useState } from "react";
+import Header from "./components/Header";
 
 type Tool = "pen" | "eraser" | "bucket";
 
-function App() {
-  // Initialize based on screen size
-  const getInitialCanvasSize = () => {
-    const width = window.innerWidth;
-    if (width < 640) return 400; // mobile
-    if (width < 1024) return 600; // tablet
-    return 800; // desktop
-  };
+const EXPORT_SIZES = [400, 600, 800, 1000] as const;
 
+function App() {
+  const canvasRef = useRef<CanvasHandle>(null);
   const [showGrid, setShowGrid] = useState(false);
   const [penColor, setPenColor] = useState("#000000");
   const [canvasColor, setCanvasColor] = useState("#ffffff");
   const [selectedTool, setSelectedTool] = useState<Tool>("pen");
-  const [canvasSize, setCanvasSize] = useState(getInitialCanvasSize());
-  // Pixel size is 1/40th of canvas size (400->10, 600->15, 800->20, 1000->25)
-  const pixelSize = canvasSize / 40;
-  const [triggerSave, setTriggerSave] = useState(0);
-  const [triggerLoad, setTriggerLoad] = useState(0);
-  const [triggerReset, setTriggerReset] = useState(0);
-  const [triggerUndo, setTriggerUndo] = useState(0);
-  const [triggerRedo, setTriggerRedo] = useState(0);
+  const [canvasSize, setCanvasSize] = useState<number>(800);
+  const [historyState, setHistoryState] = useState({
+    canUndo: false,
+    canRedo: false,
+  });
 
-  const handleResetCanvas = () => {
+  const handleCanvasStatus = useCallback(
+    (message: string, tone: CanvasStatusTone = "info") => {
+      if (tone === "error") window.alert(message);
+    },
+    [],
+  );
+
+  const handleReset = () => {
     if (
-      confirm(
-        "Are you sure you want to reset the canvas? This will clear all your work."
+      window.confirm(
+        "Reset the artwork? This clears the current drawing but can still be undone.",
       )
     ) {
-      setTriggerReset((prev) => prev + 1);
+      canvasRef.current?.reset();
     }
   };
 
-  const handleCanvasSize = () => {
-    const sizes = [400, 600, 800, 1000];
-    const currentIndex = sizes.indexOf(canvasSize);
-    const nextIndex = (currentIndex + 1) % sizes.length;
-    const newSize = sizes[nextIndex];
-
-    if (
-      confirm(
-        `Change canvas size to ${newSize}x${newSize}? This will reset the canvas.`
-      )
-    ) {
-      setCanvasSize(newSize);
-      setTriggerReset((prev) => prev + 1);
-    }
+  const cycleCanvasSize = () => {
+    setCanvasSize((current) => {
+      const currentIndex = EXPORT_SIZES.findIndex((size) => size === current);
+      return EXPORT_SIZES[(currentIndex + 1) % EXPORT_SIZES.length];
+    });
   };
 
   return (
-    <div className="flex flex-col min-h-screen select-none">
-      <main className="mx-auto max-w-screen-xl px-4 sm:px-6 md:px-8 flex-1">
-        {/* match header container width */}
+    <div className="flex min-h-screen select-none flex-col">
+      <main className="mx-auto w-full max-w-screen-xl flex-1 px-4 sm:px-6 md:px-8">
         <Header />
-        {/* Top tools */}
-        <div className="flex flex-wrap justify-center items-center gap-3 sm:gap-4 md:gap-6 py-2">
+
+        <div className="flex flex-wrap items-center justify-center gap-3 py-2 sm:gap-4 md:gap-6">
           <Button
+            aria-pressed={selectedTool === "pen"}
             onClick={() => setSelectedTool("pen")}
             className={selectedTool === "pen" ? "bg-white! text-black!" : ""}
           >
             Pen
           </Button>
           <Button
+            aria-pressed={selectedTool === "eraser"}
             onClick={() => setSelectedTool("eraser")}
             className={selectedTool === "eraser" ? "bg-white! text-black!" : ""}
           >
             Eraser
           </Button>
           <Button
+            aria-pressed={selectedTool === "bucket"}
             onClick={() => setSelectedTool("bucket")}
             className={selectedTool === "bucket" ? "bg-white! text-black!" : ""}
           >
@@ -92,51 +86,55 @@ function App() {
           />
         </div>
 
-        {/* Canvas + side buttons */}
-        <div className="w-full flex justify-center p-4">
-          <div className="grid grid-cols-1 md:grid-cols-[auto_1fr_auto] items-center gap-4 md:gap-6">
+        <div className="flex w-full justify-center p-4">
+          <div className="grid w-full grid-cols-1 items-center gap-4 md:grid-cols-[auto_minmax(0,800px)_auto] md:gap-6">
             <Button
               className="self-center justify-self-center"
-              onClick={() => setTriggerUndo((prev) => prev + 1)}
+              onClick={() => canvasRef.current?.undo()}
+              disabled={!historyState.canUndo}
             >
               Undo
             </Button>
             <Canvas
+              ref={canvasRef}
               showGrid={showGrid}
               penColor={penColor}
               canvasColor={canvasColor}
               selectedTool={selectedTool}
               canvasSize={canvasSize}
-              pixelSize={pixelSize}
-              triggerSave={triggerSave}
-              triggerLoad={triggerLoad}
-              triggerReset={triggerReset}
-              triggerUndo={triggerUndo}
-              triggerRedo={triggerRedo}
+              onHistoryChange={setHistoryState}
+              onCanvasColorRestore={setCanvasColor}
+              onStatus={handleCanvasStatus}
             />
             <Button
               className="self-center justify-self-center"
-              onClick={() => setTriggerRedo((prev) => prev + 1)}
+              onClick={() => canvasRef.current?.redo()}
+              disabled={!historyState.canRedo}
             >
               Redo
             </Button>
           </div>
         </div>
 
-        {/* Bottom row */}
-        <div className="w-full flex justify-center">
-          <div className="flex flex-wrap justify-center items-center gap-3 sm:gap-4 md:gap-6 p-3">
-            <Button onClick={() => setTriggerSave((prev) => prev + 1)}>
-              Save
-            </Button>
-            <Button onClick={() => setTriggerLoad((prev) => prev + 1)}>
+        <div className="flex w-full justify-center">
+          <div className="flex flex-wrap items-center justify-center gap-3 p-3 sm:gap-4 md:gap-6">
+            <Button onClick={() => canvasRef.current?.save()}>Save</Button>
+            <Button onClick={() => canvasRef.current?.openFilePicker()}>
               Load
             </Button>
-            <Button onClick={handleCanvasSize}>
+            <Button
+              onClick={cycleCanvasSize}
+              aria-label={`Change PNG export size. Current size ${canvasSize} by ${canvasSize}`}
+            >
               Canvas-Size ({canvasSize})
             </Button>
-            <Button onClick={() => setShowGrid(!showGrid)}>Line-Toggle</Button>
-            <Button onClick={handleResetCanvas}>Reset-Canvas</Button>
+            <Button
+              aria-pressed={showGrid}
+              onClick={() => setShowGrid((current) => !current)}
+            >
+              Line-Toggle
+            </Button>
+            <Button onClick={handleReset}>Reset-Canvas</Button>
           </div>
         </div>
       </main>

@@ -45,3 +45,13 @@ html {
   font-family: var(--font-pixel);
   font-size: var(--text-default);
 }
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+button,
+input {
+  font: inherit;
+}

@@ -1,6 +1,3 @@
-import { ChromePicker } from "react-color";
-import { useState, useRef, useEffect } from "react";
-
 type ColorPickerProps = {
   color: string;
   onChange: (color: string) => void;
@@ -12,53 +9,16 @@ export default function ColorPicker({
   onChange,
   label,
 }: ColorPickerProps) {
-  const [showPicker, setShowPicker] = useState(false);
-  const pickerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        pickerRef.current &&
-        !pickerRef.current.contains(event.target as Node)
-      ) {
-        setShowPicker(false);
-      }
-    };
-
-    if (showPicker) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [showPicker]);
-
   return (
-    <div className="relative" ref={pickerRef}>
-      <button
-        onClick={() => setShowPicker(!showPicker)}
-        className={[
-          "border-2 border-white bg-[#4a4a4a] text-white uppercase font-bold tracking-wide",
-          "rounded-md shadow-md transition-colors duration-200",
-          "hover:bg-white hover:text-black",
-          "min-w-[7.5rem]",
-          "py-0.5 px-1 md:py-0.5 md:px-2 xl:py-1 xl:px-3 2xl:py-1.5 2xl:px-4",
-          "text-xs md:text-sm xl:text-base 2xl:text-lg",
-          "flex items-center justify-center gap-2",
-        ].join(" ")}
-      >
-        <div
-          className="w-5 h-5 rounded border border-white"
-          style={{ backgroundColor: color }}
-        />
-        <span>{label}</span>
-      </button>
-      {showPicker && (
-        <div className="absolute top-12 left-0 z-50">
-          <ChromePicker color={color} onChange={(c) => onChange(c.hex)} />
-        </div>
-      )}
-    </div>
+    <label className="flex min-w-[7.5rem] cursor-pointer items-center justify-center gap-2 rounded-md border-2 border-white bg-[#4a4a4a] px-1 py-0.5 text-xs font-bold uppercase tracking-wide text-white shadow-md transition-colors duration-200 hover:bg-white hover:text-black focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-white md:px-2 md:py-0.5 md:text-sm xl:px-3 xl:py-1 xl:text-base 2xl:px-4 2xl:py-1.5 2xl:text-lg">
+      <input
+        type="color"
+        value={color}
+        aria-label={label}
+        onChange={(event) => onChange(event.target.value)}
+        className="h-5 w-5 cursor-pointer rounded border border-white bg-transparent p-0"
+      />
+      <span>{label}</span>
+    </label>
   );
 }
