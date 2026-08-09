@@ -13,6 +13,7 @@ The editor includes:
 - Pen, eraser, and contiguous bucket-fill tools
 - Separate pen and canvas color controls
 - Mouse, touch, and stylus drawing with continuous strokes
+- A responsive layout for phone, tablet, and desktop screens
 - A visual grid that does not appear in exported artwork
 - Undo and redo for drawing, imports, resets, and canvas-color changes
 - PNG import into the fixed grid
@@ -30,6 +31,13 @@ The editor includes:
 8. Select **Reset-Canvas** to open the confirmation notice at the top of the page. Confirm **Reset** to clear the drawing. A reset can be undone.
 
 Artwork is kept only in the current browser session, so save a PNG before closing or reloading the page.
+
+### Small-screen layout
+
+- On narrow or short screens, the canvas appears first and Undo and Redo sit together underneath it.
+- The canvas is limited by both the available width and the dynamic screen height so phone landscape mode remains usable.
+- Controls use compact, touch-friendly sizing on smaller screens, and the page edges and reset notice account for device safe areas.
+- Viewports at least 768 pixels wide and 600 pixels tall retain the original side-button canvas layout.
 
 ### PNG import behavior
 

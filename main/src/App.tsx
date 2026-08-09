@@ -48,23 +48,28 @@ function App() {
       {showResetToast && (
         <div
           role="alert"
-          className="fixed inset-x-4 top-4 z-50 mx-auto max-w-md rounded-md border-2 border-white bg-[#2e2e2e] p-4 text-center text-white shadow-xl"
+          style={{
+            top: "max(1rem, calc(env(safe-area-inset-top) + 0.5rem))",
+            left: "max(0.5rem, env(safe-area-inset-left))",
+            right: "max(0.5rem, env(safe-area-inset-right))",
+          }}
+          className="fixed z-50 mx-auto max-h-[calc(100dvh-2rem)] max-w-md overflow-y-auto rounded-md border-2 border-white bg-[#2e2e2e] p-3 text-center text-white shadow-xl sm:p-4"
         >
           <p className="font-bold">Reset the canvas?</p>
           <p className="mt-1 text-sm">
             This will clear your artwork. You can undo the reset afterward.
           </p>
-          <div className="mt-3 flex justify-center gap-3">
+          <div className="mt-3 flex flex-col items-center justify-center gap-2 min-[360px]:flex-row min-[360px]:gap-3">
             <Button onClick={confirmReset}>Reset</Button>
             <Button onClick={() => setShowResetToast(false)}>Cancel</Button>
           </div>
         </div>
       )}
 
-      <main className="mx-auto w-full max-w-screen-xl flex-1 px-4 sm:px-6 md:px-8">
+      <main className="responsive-page-gutter mx-auto w-full max-w-screen-xl flex-1">
         <Header />
 
-        <div className="flex flex-wrap items-center justify-center gap-3 py-2 sm:gap-4 md:gap-6">
+        <div className="responsive-control-row flex flex-wrap items-center justify-center py-2">
           <Button
             aria-pressed={selectedTool === "pen"}
             onClick={() => setSelectedTool("pen")}
@@ -98,28 +103,30 @@ function App() {
           />
         </div>
 
-        <div className="flex w-full justify-center p-4">
-          <div className="grid w-full grid-cols-1 items-center gap-4 md:grid-cols-[auto_minmax(0,800px)_auto] md:gap-6">
+        <div className="flex w-full justify-center px-0 py-3 sm:p-4">
+          <div className="editor-layout grid w-full grid-cols-2 items-center gap-4">
             <Button
-              className="self-center justify-self-center"
+              className="editor-undo order-2 self-center justify-self-end"
               onClick={() => canvasRef.current?.undo()}
               disabled={!historyState.canUndo}
             >
               Undo
             </Button>
-            <Canvas
-              ref={canvasRef}
-              showGrid={showGrid}
-              penColor={penColor}
-              canvasColor={canvasColor}
-              selectedTool={selectedTool}
-              canvasSize={canvasSize}
-              onHistoryChange={setHistoryState}
-              onCanvasColorRestore={setCanvasColor}
-              onStatus={handleCanvasStatus}
-            />
+            <div className="editor-canvas order-1 col-span-2 mx-auto w-full max-w-[75dvh]">
+              <Canvas
+                ref={canvasRef}
+                showGrid={showGrid}
+                penColor={penColor}
+                canvasColor={canvasColor}
+                selectedTool={selectedTool}
+                canvasSize={canvasSize}
+                onHistoryChange={setHistoryState}
+                onCanvasColorRestore={setCanvasColor}
+                onStatus={handleCanvasStatus}
+              />
+            </div>
             <Button
-              className="self-center justify-self-center"
+              className="editor-redo order-3 self-center justify-self-start"
               onClick={() => canvasRef.current?.redo()}
               disabled={!historyState.canRedo}
             >
@@ -128,8 +135,11 @@ function App() {
           </div>
         </div>
 
-        <div className="flex w-full justify-center">
-          <div className="flex flex-wrap items-center justify-center gap-3 p-3 sm:gap-4 md:gap-6">
+        <div
+          className="flex w-full justify-center"
+          style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+        >
+          <div className="responsive-control-row flex flex-wrap items-center justify-center p-3">
             <Button onClick={() => canvasRef.current?.save()}>Save</Button>
             <Button onClick={() => canvasRef.current?.openFilePicker()}>
               Load

@@ -55,3 +55,80 @@ button,
 input {
   font: inherit;
 }
+
+.mobile-touch-target {
+  min-height: 2.5rem;
+}
+
+.responsive-button-size {
+  min-width: 5.75rem;
+}
+
+.responsive-color-size {
+  min-width: 6.75rem;
+}
+
+.responsive-control-row {
+  gap: 0.5rem;
+}
+
+.responsive-page-gutter {
+  padding-left: max(0.5rem, env(safe-area-inset-left));
+  padding-right: max(0.5rem, env(safe-area-inset-right));
+}
+
+@media (min-width: 640px) {
+  .responsive-page-gutter {
+    padding-left: max(1.5rem, env(safe-area-inset-left));
+    padding-right: max(1.5rem, env(safe-area-inset-right));
+  }
+}
+
+@media (min-width: 640px) and (min-height: 600px) {
+  .mobile-touch-target {
+    min-height: 0;
+  }
+
+  .responsive-button-size,
+  .responsive-color-size {
+    min-width: 7.5rem;
+  }
+
+  .responsive-control-row {
+    gap: 1rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .responsive-page-gutter {
+    padding-left: max(2rem, env(safe-area-inset-left));
+    padding-right: max(2rem, env(safe-area-inset-right));
+  }
+}
+
+@media (min-width: 768px) and (min-height: 600px) {
+  .responsive-control-row {
+    gap: 1.5rem;
+  }
+
+  .editor-layout {
+    grid-template-columns: auto minmax(0, 800px) auto;
+    gap: 1.5rem;
+  }
+
+  .editor-undo {
+    order: 1;
+    justify-self: center;
+  }
+
+  .editor-canvas {
+    order: 2;
+    grid-column: auto;
+    max-width: none;
+  }
+
+  .editor-redo {
+    order: 3;
+    justify-self: center;
+  }
+}
