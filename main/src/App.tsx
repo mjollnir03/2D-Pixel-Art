@@ -18,6 +18,7 @@ function App() {
   const [canvasColor, setCanvasColor] = useState("#ffffff");
   const [selectedTool, setSelectedTool] = useState<Tool>("pen");
   const [canvasSize, setCanvasSize] = useState<number>(800);
+  const [showResetToast, setShowResetToast] = useState(false);
   const [historyState, setHistoryState] = useState({
     canUndo: false,
     canRedo: false,
@@ -30,14 +31,9 @@ function App() {
     [],
   );
 
-  const handleReset = () => {
-    if (
-      window.confirm(
-        "Reset the artwork? This clears the current drawing but can still be undone.",
-      )
-    ) {
-      canvasRef.current?.reset();
-    }
+  const confirmReset = () => {
+    canvasRef.current?.reset();
+    setShowResetToast(false);
   };
 
   const cycleCanvasSize = () => {
@@ -49,6 +45,22 @@ function App() {
 
   return (
     <div className="flex min-h-screen select-none flex-col">
+      {showResetToast && (
+        <div
+          role="alert"
+          className="fixed inset-x-4 top-4 z-50 mx-auto max-w-md rounded-md border-2 border-white bg-[#2e2e2e] p-4 text-center text-white shadow-xl"
+        >
+          <p className="font-bold">Reset the canvas?</p>
+          <p className="mt-1 text-sm">
+            This will clear your artwork. You can undo the reset afterward.
+          </p>
+          <div className="mt-3 flex justify-center gap-3">
+            <Button onClick={confirmReset}>Reset</Button>
+            <Button onClick={() => setShowResetToast(false)}>Cancel</Button>
+          </div>
+        </div>
+      )}
+
       <main className="mx-auto w-full max-w-screen-xl flex-1 px-4 sm:px-6 md:px-8">
         <Header />
 
@@ -134,7 +146,7 @@ function App() {
             >
               Line-Toggle
             </Button>
-            <Button onClick={handleReset}>Reset-Canvas</Button>
+            <Button onClick={() => setShowResetToast(true)}>Reset-Canvas</Button>
           </div>
         </div>
       </main>

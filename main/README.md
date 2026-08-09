@@ -27,7 +27,7 @@ The editor includes:
 5. Use **Line-Toggle** to show or hide the editor grid.
 6. Select **Canvas-Size** to cycle through the available PNG resolutions. This does not change the 40 × 40 logical grid or clear the artwork.
 7. Select **Save** to download the artwork or **Load** to import a PNG.
-8. Select **Reset-Canvas** to clear the drawing. A reset can be undone.
+8. Select **Reset-Canvas** to open the confirmation notice at the top of the page. Confirm **Reset** to clear the drawing. A reset can be undone.
 
 Artwork is kept only in the current browser session, so save a PNG before closing or reloading the page.
 
