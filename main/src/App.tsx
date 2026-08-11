@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Button from "./components/Button";
 import Canvas, {
   type CanvasHandle,
@@ -8,6 +8,7 @@ import ColorPicker from "./components/ColorPicker";
 import Header from "./components/Header";
 
 type Tool = "pen" | "eraser" | "bucket";
+type ConfirmationKind = "reset" | "import";
 
 const EXPORT_SIZES = [400, 600, 800, 1000] as const;
 
@@ -18,7 +19,11 @@ function App() {
   const [canvasColor, setCanvasColor] = useState("#ffffff");
   const [selectedTool, setSelectedTool] = useState<Tool>("pen");
   const [canvasSize, setCanvasSize] = useState<number>(800);
-  const [showResetToast, setShowResetToast] = useState(false);
+  const [confirmationKind, setConfirmationKind] =
+    useState<ConfirmationKind | null>(null);
+  const importConfirmationResolverRef = useRef<
+    ((confirmed: boolean) => void) | null
+  >(null);
   const [historyState, setHistoryState] = useState({
     canUndo: false,
     canRedo: false,
@@ -31,9 +36,51 @@ function App() {
     [],
   );
 
-  const confirmReset = () => {
+  const settleImportConfirmation = useCallback((confirmed: boolean) => {
+    const resolve = importConfirmationResolverRef.current;
+    importConfirmationResolverRef.current = null;
+    setConfirmationKind((current) => (current === "import" ? null : current));
+    resolve?.(confirmed);
+  }, []);
+
+  const requestImportReplace = useCallback(() => {
+    settleImportConfirmation(false);
+    return new Promise<boolean>((resolve) => {
+      importConfirmationResolverRef.current = resolve;
+      setConfirmationKind("import");
+    });
+  }, [settleImportConfirmation]);
+
+  useEffect(
+    () => () => {
+      importConfirmationResolverRef.current?.(false);
+      importConfirmationResolverRef.current = null;
+    },
+    [],
+  );
+
+  const confirmCurrentAction = () => {
+    if (confirmationKind === "import") {
+      settleImportConfirmation(true);
+      return;
+    }
+
     canvasRef.current?.reset();
-    setShowResetToast(false);
+    setConfirmationKind(null);
+  };
+
+  const cancelCurrentAction = () => {
+    if (confirmationKind === "import") {
+      settleImportConfirmation(false);
+      return;
+    }
+
+    setConfirmationKind(null);
+  };
+
+  const requestReset = () => {
+    settleImportConfirmation(false);
+    setConfirmationKind("reset");
   };
 
   const cycleCanvasSize = () => {
@@ -45,7 +92,7 @@ function App() {
 
   return (
     <div className="flex min-h-screen select-none flex-col">
-      {showResetToast && (
+      {confirmationKind && (
         <div
           role="alert"
           style={{
@@ -55,13 +102,21 @@ function App() {
           }}
           className="fixed z-50 mx-auto max-h-[calc(100dvh-2rem)] max-w-md overflow-y-auto rounded-md border-2 border-white bg-[#2e2e2e] p-3 text-center text-white shadow-xl sm:p-4"
         >
-          <p className="font-bold">Reset the canvas?</p>
+          <p className="font-bold">
+            {confirmationKind === "reset"
+              ? "Reset the canvas?"
+              : "Replace current artwork?"}
+          </p>
           <p className="mt-1 text-sm">
-            This will clear your artwork. You can undo the reset afterward.
+            {confirmationKind === "reset"
+              ? "This will clear your artwork. You can undo the reset afterward."
+              : "Loading this PNG will replace the current artwork. You can still use Undo afterward."}
           </p>
           <div className="mt-3 flex flex-col items-center justify-center gap-2 min-[360px]:flex-row min-[360px]:gap-3">
-            <Button onClick={confirmReset}>Reset</Button>
-            <Button onClick={() => setShowResetToast(false)}>Cancel</Button>
+            <Button onClick={confirmCurrentAction}>
+              {confirmationKind === "reset" ? "Reset" : "Load PNG"}
+            </Button>
+            <Button onClick={cancelCurrentAction}>Cancel</Button>
           </div>
         </div>
       )}
@@ -123,6 +178,7 @@ function App() {
                 onHistoryChange={setHistoryState}
                 onCanvasColorRestore={setCanvasColor}
                 onStatus={handleCanvasStatus}
+                onRequestImportReplace={requestImportReplace}
               />
             </div>
             <Button
@@ -135,10 +191,7 @@ function App() {
           </div>
         </div>
 
-        <div
-          className="flex w-full justify-center"
-          style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
-        >
+        <div className="flex w-full justify-center">
           <div className="responsive-control-row flex flex-wrap items-center justify-center p-3">
             <Button onClick={() => canvasRef.current?.save()}>Save</Button>
             <Button onClick={() => canvasRef.current?.openFilePicker()}>
@@ -156,10 +209,19 @@ function App() {
             >
               Line-Toggle
             </Button>
-            <Button onClick={() => setShowResetToast(true)}>Reset-Canvas</Button>
+            <Button onClick={requestReset}>Reset-Canvas</Button>
           </div>
         </div>
       </main>
+
+      <footer
+        className="responsive-page-gutter w-full py-4 text-center text-sm text-white"
+        style={{
+          paddingBottom: "max(1rem, env(safe-area-inset-bottom))",
+        }}
+      >
+        Ellmaer Ranjber
+      </footer>
     </div>
   );
 }

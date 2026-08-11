@@ -45,7 +45,7 @@ Artwork is kept only in the current browser session, so save a PNG before closin
 - Images may be at most 8192 pixels on either side and 32 megapixels in total.
 - A 40, 400, 600, 800, or 1000-pixel square PNG imports directly. Other dimensions require confirmation before being sampled into the 40 × 40 grid.
 - Transparent pixels and pixels matching the current canvas color become background cells.
-- Loading over existing work requires confirmation, and a completed import can be undone.
+- Loading over existing work opens a confirmation notice at the top of the page, and a completed import can be undone.
 
 ## Technology in use
 
@@ -117,6 +117,10 @@ npm audit
 - `src/styles/index.css` loads Tailwind and the bundled Pixelify Sans font.
 - `vite.config.ts` enables React and Tailwind and sets the `/2D-Pixel-Art/` production base path.
 - `package.json` defines the direct packages and scripts; `package-lock.json` pins the complete install.
+
+## Updating the website icon
+
+The browser-tab icon is `public/pixel-art.svg`, referenced by the favicon link in `index.html`. To use another SVG, replace that file while keeping the same filename. To use a PNG or ICO file instead, place it in `public/` and update both the `href` and `type` values on the `<link rel="icon">` element in `index.html`. Use a square icon; browsers may require a hard refresh or reopened tab before a cached favicon changes.
 
 ## GitHub Pages deployment
 

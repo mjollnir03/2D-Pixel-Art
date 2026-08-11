@@ -52,12 +52,14 @@ type CanvasProps = {
   onHistoryChange?: (state: { canUndo: boolean; canRedo: boolean }) => void;
   onCanvasColorRestore?: (color: string) => void;
   onStatus?: (message: string, tone?: CanvasStatusTone) => void;
+  onRequestImportReplace: () => Promise<boolean>;
 };
 
 const MAX_IMAGE_BYTES = 20 * 1024 * 1024;
 const MAX_IMAGE_DIMENSION = 8192;
 const MAX_IMAGE_PIXELS = 32_000_000;
 const SUPPORTED_IMPORT_SIZES = new Set([40, 400, 600, 800, 1000]);
+const EDITOR_RENDER_SIZE = 800;
 
 function renderDocument(
   canvas: HTMLCanvasElement,
@@ -96,6 +98,7 @@ const Canvas = forwardRef<CanvasHandle, CanvasProps>(function Canvas(
     onHistoryChange,
     onCanvasColorRestore,
     onStatus,
+    onRequestImportReplace,
   },
   ref,
 ) {
@@ -186,7 +189,11 @@ const Canvas = forwardRef<CanvasHandle, CanvasProps>(function Canvas(
   useEffect(() => {
     const canvas = drawCanvasRef.current;
     if (!canvas) return;
-    const rendered = renderDocument(canvas, displayedDocument, canvasSize);
+    const rendered = renderDocument(
+      canvas,
+      displayedDocument,
+      EDITOR_RENDER_SIZE,
+    );
     if (!rendered && !contextErrorReportedRef.current) {
       contextErrorReportedRef.current = true;
       onStatus?.(
@@ -194,34 +201,33 @@ const Canvas = forwardRef<CanvasHandle, CanvasProps>(function Canvas(
         "error",
       );
     }
-  }, [canvasSize, displayedDocument, onStatus]);
+  }, [displayedDocument, onStatus]);
 
   useEffect(() => {
     const canvas = overlayCanvasRef.current;
     if (!canvas) return;
-    if (canvas.width !== canvasSize) canvas.width = canvasSize;
-    if (canvas.height !== canvasSize) canvas.height = canvasSize;
+    if (canvas.width !== EDITOR_RENDER_SIZE) canvas.width = EDITOR_RENDER_SIZE;
+    if (canvas.height !== EDITOR_RENDER_SIZE) canvas.height = EDITOR_RENDER_SIZE;
     const context = canvas.getContext("2d");
     if (!context) return;
 
-    context.clearRect(0, 0, canvasSize, canvasSize);
-    const cellSize = canvasSize / GRID_SIZE;
+    context.clearRect(0, 0, EDITOR_RENDER_SIZE, EDITOR_RENDER_SIZE);
+    const cellSize = EDITOR_RENDER_SIZE / GRID_SIZE;
 
     if (showGrid) {
       context.beginPath();
       context.strokeStyle = "rgba(23, 23, 23, 0.32)";
-      context.lineWidth = Math.max(1, canvasSize / 1000);
+      context.lineWidth = 1;
       for (let step = 1; step < GRID_SIZE; step += 1) {
         const position = step * cellSize;
         context.moveTo(position, 0);
-        context.lineTo(position, canvasSize);
+        context.lineTo(position, EDITOR_RENDER_SIZE);
         context.moveTo(0, position);
-        context.lineTo(canvasSize, position);
+        context.lineTo(EDITOR_RENDER_SIZE, position);
       }
       context.stroke();
     }
-
-  }, [canvasSize, showGrid]);
+  }, [showGrid]);
 
   const pointFromPointer = useCallback(
     (event: PointerEvent<HTMLCanvasElement>) => {
@@ -412,6 +418,7 @@ const Canvas = forwardRef<CanvasHandle, CanvasProps>(function Canvas(
     const input = event.currentTarget;
     const file = input.files?.[0];
     if (!file) return;
+    input.value = "";
 
     const operation = importOperationRef.current + 1;
     importOperationRef.current = operation;
@@ -419,7 +426,6 @@ const Canvas = forwardRef<CanvasHandle, CanvasProps>(function Canvas(
     const validationError = validatePngFile(file, MAX_IMAGE_BYTES);
     if (validationError) {
       onStatus?.(validationError, "error");
-      input.value = "";
       return;
     }
 
@@ -459,12 +465,10 @@ const Canvas = forwardRef<CanvasHandle, CanvasProps>(function Canvas(
         historyRef.current.past.length > 0 ||
         historyRef.current.future.length > 0 ||
         current.cells.some((color) => color !== null);
-      if (
-        hasEditorChanges &&
-        !window.confirm(
-          "Loading this PNG will replace the current artwork. You can still use Undo afterward. Continue?",
-        )
-      ) {
+      const shouldReplace =
+        !hasEditorChanges || (await onRequestImportReplace());
+      if (!isCurrentImport()) return;
+      if (!shouldReplace) {
         onStatus?.("PNG import cancelled.");
         return;
       }
@@ -531,7 +535,6 @@ const Canvas = forwardRef<CanvasHandle, CanvasProps>(function Canvas(
       }
     } finally {
       bitmap?.close();
-      input.value = "";
     }
   };
 
@@ -547,8 +550,8 @@ const Canvas = forwardRef<CanvasHandle, CanvasProps>(function Canvas(
       <div className="relative aspect-square w-full overflow-hidden bg-white">
         <canvas
           ref={drawCanvasRef}
-          width={canvasSize}
-          height={canvasSize}
+          width={EDITOR_RENDER_SIZE}
+          height={EDITOR_RENDER_SIZE}
           aria-label="Pixel drawing canvas, 40 by 40 cells"
           className="block h-full w-full cursor-crosshair touch-none [image-rendering:pixelated]"
           onPointerDown={handlePointerDown}
@@ -561,8 +564,8 @@ const Canvas = forwardRef<CanvasHandle, CanvasProps>(function Canvas(
         </canvas>
         <canvas
           ref={overlayCanvasRef}
-          width={canvasSize}
-          height={canvasSize}
+          width={EDITOR_RENDER_SIZE}
+          height={EDITOR_RENDER_SIZE}
           aria-hidden="true"
           className="pointer-events-none absolute inset-0 h-full w-full [image-rendering:pixelated]"
         />
