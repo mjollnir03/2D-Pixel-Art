@@ -2,9 +2,11 @@
 
 ## About
 
-This project was created to demonstrate my growing expertise in HTML, CSS, and JavaScript. The website, titled "2D Pixel Art," was inspired by "Pixilart.com," a platform where users can create pixel art. The original version focused on implementing the core features with HTML, CSS, and JavaScript. The current version has since been modernized with React, TypeScript, Tailwind CSS, and Vite while preserving the same browser-based drawing experience.
+2D Pixel Art is a browser-based drawing application for creating pixel artwork on a fixed 40 × 40 grid. It provides pen, eraser, and bucket-fill tools; customizable pen and canvas colors; grid visibility controls; undo and redo history; and PNG import and export. The responsive interface supports mouse, touch, and stylus input, allowing the editor to work across desktop and smaller devices.
 
-The primary goal of this project is to highlight the capabilities of front-end technologies in building interactive and dynamic web experiences. Through this project, I have gained a deeper understanding of how HTML, CSS, React, and TypeScript work together to render an interface, manage application state, handle pointer and file input, and create visually engaging and functional components. Although this project is more simplistic than professional-grade tools, it showcases my growing skills in front-end development.
+The application is built with React and TypeScript, styled with Tailwind CSS, and developed and bundled with Vite. Drawing is powered by the HTML Canvas 2D API, while Pointer Events provide mouse, touch, and stylus support. Browser File, Blob, and ImageBitmap APIs handle PNG loading and downloading. The application runs entirely in the browser without a backend or account system and is deployed to GitHub Pages through GitHub Actions.
+
+The project began as an interpretation of The Odin Project’s Etch-a-Sketch assignment and was inspired by browser-based pixel-art tools such as Pixilart.com. It has since grown into a focused editor that demonstrates interactive canvas rendering, application-state management, responsive interface design, and client-side file handling.
 
 ## Live App
 
@@ -25,6 +27,6 @@ This project is based on an earlier version of my 2D-Pixel-Art project. The orig
 
 ## Conclusion
 
-This project has been a significant learning experience, allowing me to deepen my understanding of JavaScript and TypeScript, including their semantics, structure, and capabilities. Throughout this process, I have gained hands-on experience with application state, canvas drawing, pointer-event handling, and creating interactive interfaces with React, HTML, and CSS.
+2D Pixel Art represents the evolution of a simple Etch-a-Sketch exercise into a more complete and interactive drawing application. Rebuilding the project with React and TypeScript provided an opportunity to apply modern frontend development concepts while working directly with the Canvas API, browser events, application state, and client-side file handling.
 
-While there are still areas for optimization, this project represents a solid foundation for my web development journey. I’m excited to continue learning and applying more advanced front-end development techniques in future projects.
+The project also served as a practical exercise in improving an existing application rather than simply starting from scratch. Comparing the current version with the original implementation highlights the progress made in both the codebase and the overall user experience.
