@@ -76,7 +76,7 @@ jobs:
           site_url="${SITE_URL%/}/"
           for attempt in {1..10}; do
             if curl --fail --silent --show-error --location "$site_url" | grep --quiet '<title>2D Pixel Art Editor</title>'; then
-              curl --fail --silent --show-error --location "${site_url}pixel-art.svg" > /dev/null
+              curl --fail --silent --show-error --location "${site_url}icon.png" > /dev/null
               exit 0
             fi
             sleep 3
