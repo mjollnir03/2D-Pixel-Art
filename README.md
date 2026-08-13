@@ -2,11 +2,11 @@
 
 ## About
 
-2D Pixel Art is a browser-based drawing application for creating pixel artwork on a fixed 40 × 40 grid. It provides pen, eraser, and bucket-fill tools; customizable pen and canvas colors; grid visibility controls; undo and redo history; and PNG import and export. The responsive interface supports mouse, touch, and stylus input, allowing the editor to work across desktop and smaller devices.
+2D Pixel Art is a simple website for creating 2D pixel artwork on a fixed-size grid. It provides essential features such as pen, eraser, and bucket-fill tools; customizable pen and canvas colors; grid visibility controls; undo and redo history; and PNG import and export. The responsive interface supports mouse, touch, and stylus input, allowing the editor to work across both desktop and smaller devices.
 
-The application is built with React and TypeScript, styled with Tailwind CSS, and developed and bundled with Vite. Drawing is powered by the HTML Canvas 2D API, while Pointer Events provide mouse, touch, and stylus support. Browser File, Blob, and ImageBitmap APIs handle PNG loading and downloading. The application runs entirely in the browser without a backend or account system and is deployed to GitHub Pages through GitHub Actions.
+The application is built with React and TypeScript, styled with Tailwind CSS, and developed and bundled with Vite. Drawing is powered by the HTML Canvas 2D API, while Pointer Events provide support for mouse, touch, and stylus input. Browser File, Blob, and ImageBitmap APIs handle PNG loading and downloading. The application runs entirely in the browser and is deployed through GitHub Pages.
 
-The project began as an interpretation of The Odin Project’s Etch-a-Sketch assignment and was inspired by browser-based pixel-art tools such as Pixilart.com. It has since grown into a focused editor that demonstrates interactive canvas rendering, application-state management, responsive interface design, and client-side file handling.
+This project started as a simple implementation of The Odin Project’s Etch-a-Sketch assignment, with additional inspiration from Pixilart.com. Since then, it has grown into a more complete pixel-art editor with additional drawing tools, import and export functionality, and responsive support for smaller screens.
 
 ## Live App
 
@@ -16,9 +16,13 @@ You can try out the **live version of the website** here:
 
 ## Website Demo
 
-### Sketch Simple 2D Pixel Art!
+<p align="center">
+  <img src="./assets/thumbnail.png" alt="Desktop view" width="95%"/>
+</p>
 
-<!-- Upload the current website screenshot here. -->
+<p align="center">
+  <em>Desktop Screen</em>
+</p>
 
 ## References
 
